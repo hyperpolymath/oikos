@@ -26,7 +26,8 @@
     "@std/log": "jsr:@std/log@^0.224.0",
     "@std/dotenv": "jsr:@std/dotenv@^0.225.0",
     "@std/crypto": "jsr:@std/crypto@^1.0.0",
-    "rescript/lib/es6/": "./rescript-runtime/"
+    "rescript/lib/es6/": "./rescript-runtime/",
+    "@rescript/runtime/": "./node_modules/@rescript/runtime/"
   },
   "compilerOptions": {
     "strict": true,

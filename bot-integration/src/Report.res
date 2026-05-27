@@ -130,6 +130,24 @@ let generatePRComment = (analysis: analysisResult, mode: botMode): string => {
   header ++ healthLine ++ scoreTable ++ violationsSection ++ recommendationsSection ++ paretoSection ++ footer
 }
 
+// Posted when the analyser is unavailable. Honest about the failure;
+// never fabricates scores — see fix/bot-hardening-fail-closed for why.
+let generateDegradedComment = (reason: string, mode: botMode): string => {
+  let header = `## 🏛️ Oikos Analysis — unavailable\n\n`
+  let body =
+    `The analyser could not be reached for this PR, so no eco/econ/quality scores were produced.\n\n` ++
+    `> Reason: ${reason}\n\n`
+  let modeNote = switch mode {
+  | Regulator =>
+    `**Regulator mode**: this PR will not be auto-approved by Oikos until analysis completes successfully. The maintainer should re-run the bot or merge manually with explicit acknowledgement.\n\n`
+  | _ => `Re-run the bot once the analyser is healthy to get a real report.\n\n`
+  }
+  let footer =
+    `---\n` ++
+    `*[Oikos Bot](https://github.com/hyperpolymath/oikos) | Mode: ${Config.modeToString(mode)} | Status: degraded*\n`
+  header ++ body ++ modeNote ++ footer
+}
+
 // Generate SARIF for code scanning integration
 let generateSARIF = (analysis: analysisResult): Js.Json.t => {
   let rules = [

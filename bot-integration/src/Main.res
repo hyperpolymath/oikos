@@ -141,7 +141,11 @@ let jsonResponse = (data: Js.Json.t, ~status=200): Http.response => {
   )
 }
 
-// Validate GitHub signature if configured
+// Validate GitHub signature. With a secret configured we verify HMAC; without
+// one we refuse the request unless the operator explicitly opted into
+// unverified webhooks (Config.allowUnverifiedWebhooks). The previous behaviour
+// silently accepted unsigned webhooks when no secret was set — that is a spoof
+// vector and is the one thing we will not do.
 let validateGitHubSignature = async (
   config: config,
   headers: Js.Dict.t<string>,
@@ -157,7 +161,18 @@ let validateGitHubSignature = async (
     } else {
       None
     }
-  | None => None
+  | None =>
+    if Config.allowUnverifiedWebhooks() {
+      None
+    } else {
+      error("GitHub webhook received but GITHUB_WEBHOOK_SECRET is not set")
+      Some(
+        Http.makeResponse(
+          `{"error": "Server refuses unverified webhooks. Set GITHUB_WEBHOOK_SECRET."}`,
+          {"status": 401},
+        ),
+      )
+    }
   }
 }
 
@@ -210,13 +225,20 @@ let handleGitHubWebhook = async (
               headSha,
             )
 
-            let comment = switch analysisResult {
-            | Ok(analysis) =>
-              Report.generatePRComment(analysis, config.mode)
+            // Build the comment honestly:
+            //   Ok  → real scores
+            //   Err → degraded notice naming the failure; never mockAnalysis()
+            //         (mock data on a real PR is worse than no comment)
+            let (comment, analyserHealthy) = switch analysisResult {
+            | Ok(analysis) => (Report.generatePRComment(analysis, config.mode), true)
             | Error(err) =>
-              error(`Analysis failed: ${err}`)
-              let analysis = Analysis.mockAnalysis()
-              Report.generatePRComment(analysis, config.mode)
+              error(
+                `Analysis failed`,
+                ~data=Js.Json.object_(
+                  Js.Dict.fromArray([("reason", Js.Json.string(err))]),
+                ),
+              )
+              (Report.generateDegradedComment(err, config.mode), false)
             }
 
             // Post comment to GitHub if authenticated
@@ -238,11 +260,45 @@ let handleGitHubWebhook = async (
                     Js.Dict.fromArray([
                       ("pr", Js.Json.number(Belt.Int.toFloat(prNumber))),
                       ("commentId", Js.Json.number(Belt.Int.toFloat(commentId))),
+                      ("degraded", Js.Json.boolean(!analyserHealthy)),
                     ]),
                   ),
                 )
               | Error(err) =>
                 error(`Failed to post PR comment: ${err}`)
+              }
+
+              // Mirror analyser health as a check_run so branch protection /
+              // reviewers can see the bot's state without scrolling comments.
+              // Regulator mode escalates a degraded run to action_required.
+              if headSha != "" {
+                let conclusion = if analyserHealthy {
+                  "success"
+                } else if config.mode == Regulator {
+                  "action_required"
+                } else {
+                  "neutral"
+                }
+                let title = analyserHealthy
+                  ? "Oikos analysis complete"
+                  : "Oikos analysis unavailable"
+                let summary = analyserHealthy
+                  ? "See PR comment for eco/econ/quality scores."
+                  : "Analyser could not be reached. See PR comment for details."
+                let checkResult = await GitHubAPI.createCheckRun(
+                  token,
+                  e.repository.owner,
+                  e.repository.name,
+                  headSha,
+                  "oikos",
+                  conclusion,
+                  ~title,
+                  ~summary,
+                )
+                switch checkResult {
+                | Ok(_) => ()
+                | Error(err) => error(`Failed to create check run: ${err}`)
+                }
               }
             | Error(err) =>
               // Not configured for GitHub App - log comment instead
@@ -263,7 +319,7 @@ let handleGitHubWebhook = async (
   }
 }
 
-// Validate GitLab token if configured
+// Validate GitLab token. Same fail-closed contract as the GitHub validator.
 let validateGitLabToken = (
   config: config,
   headers: Js.Dict.t<string>,
@@ -277,7 +333,18 @@ let validateGitLabToken = (
     } else {
       None
     }
-  | None => None
+  | None =>
+    if Config.allowUnverifiedWebhooks() {
+      None
+    } else {
+      error("GitLab webhook received but GITLAB_WEBHOOK_SECRET is not set")
+      Some(
+        Http.makeResponse(
+          `{"error": "Server refuses unverified webhooks. Set GITLAB_WEBHOOK_SECRET."}`,
+          {"status": 401},
+        ),
+      )
+    }
   }
 }
 
@@ -312,27 +379,35 @@ let handleGitLabWebhook = async (
           ),
         )
 
-        // Handle merge request events
+        // Handle merge request events. Same fail-closed contract as GitHub:
+        // real scores when the analyser succeeds, a degraded notice when it
+        // doesn't — never fabricated numbers.
         if e.eventType == "Merge Request Hook" {
-          let (mrIid, baseSha, headSha) = extractMRInfo(payload)
+          let (mrIid, _baseSha, _headSha) = extractMRInfo(payload)
+          let _ = mrIid
 
           let analysisResult = await Analysis.analyzeDiff(
             config.analysisEndpoint,
             e.repository.url,
-            baseSha,
-            headSha,
+            _baseSha,
+            _headSha,
           )
 
-          switch analysisResult {
-          | Ok(analysis) =>
-            let comment = Report.generatePRComment(analysis, config.mode)
-            info(`Generated MR comment for MR !${Belt.Int.toString(mrIid)}`, ~data=Js.Json.string(comment))
+          let comment = switch analysisResult {
+          | Ok(analysis) => Report.generatePRComment(analysis, config.mode)
           | Error(err) =>
-            error(`Analysis failed: ${err}`)
-            let analysis = Analysis.mockAnalysis()
-            let comment = Report.generatePRComment(analysis, config.mode)
-            info(`Generated fallback MR comment`, ~data=Js.Json.string(comment))
+            error(
+              `Analysis failed`,
+              ~data=Js.Json.object_(
+                Js.Dict.fromArray([("reason", Js.Json.string(err))]),
+              ),
+            )
+            Report.generateDegradedComment(err, config.mode)
           }
+          info(
+            `Generated MR comment for MR !${Belt.Int.toString(mrIid)}`,
+            ~data=Js.Json.string(comment),
+          )
         }
 
         jsonResponse(Js.Json.object_(Js.Dict.fromArray([("status", Js.Json.string("processed"))])))

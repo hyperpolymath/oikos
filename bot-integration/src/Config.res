@@ -48,6 +48,15 @@ let loadPrivateKey = (): option<string> => {
   }
 }
 
+// Escape hatch for local dev (smee, ngrok, fixtures). Must be set explicitly
+// — defaulting to "accept unverified" is the same shape as Main.res:150 used to
+// be, and is a webhook-spoof vector.
+let allowUnverifiedWebhooks = (): bool =>
+  switch getEnv("OIKOS_ALLOW_UNVERIFIED_WEBHOOKS") {
+  | Some(v) => Js.String2.toLowerCase(v) == "true" || v == "1"
+  | None => false
+  }
+
 let load = (): result<config, string> => {
   let modeStr = switch getEnv("BOT_MODE") {
   | Some(m) => m
@@ -60,15 +69,26 @@ let load = (): result<config, string> => {
   | None => "http://localhost:8080/analyze"
   }
 
-  Ok({
-    port: getEnvInt("PORT", ~default=3000),
-    mode,
-    analysisEndpoint,
-    githubWebhookSecret: getEnv("GITHUB_WEBHOOK_SECRET"),
-    gitlabWebhookSecret: getEnv("GITLAB_WEBHOOK_SECRET"),
-    githubAppId: getEnv("GITHUB_APP_ID"),
-    githubPrivateKey: loadPrivateKey(),
-  })
+  let githubWebhookSecret = getEnv("GITHUB_WEBHOOK_SECRET")
+  let gitlabWebhookSecret = getEnv("GITLAB_WEBHOOK_SECRET")
+  let unverifiedOk = allowUnverifiedWebhooks()
+
+  if githubWebhookSecret == None && gitlabWebhookSecret == None && !unverifiedOk {
+    Error(
+      "Refusing to start: no webhook secret configured. Set GITHUB_WEBHOOK_SECRET and/or " ++
+      "GITLAB_WEBHOOK_SECRET, or pass OIKOS_ALLOW_UNVERIFIED_WEBHOOKS=true for local dev only.",
+    )
+  } else {
+    Ok({
+      port: getEnvInt("PORT", ~default=3000),
+      mode,
+      analysisEndpoint,
+      githubWebhookSecret,
+      gitlabWebhookSecret,
+      githubAppId: getEnv("GITHUB_APP_ID"),
+      githubPrivateKey: loadPrivateKey(),
+    })
+  }
 }
 
 let modeToString = (mode: botMode): string => {

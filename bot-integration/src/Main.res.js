@@ -2,48 +2,48 @@
 
 import * as Config from "./Config.res.js";
 import * as Report from "./Report.res.js";
-import * as Js_dict from "rescript/lib/es6/js_dict.js";
-import * as Js_json from "rescript/lib/es6/js_json.js";
+import * as Js_dict from "@rescript/runtime/lib/es6/Js_dict.js";
+import * as Js_json from "@rescript/runtime/lib/es6/Js_json.js";
 import * as Webhook from "./Webhook.res.js";
 import * as Analysis from "./Analysis.res.js";
 import * as GitHubAPI from "./GitHubAPI.res.js";
 import * as GitHubApp from "./GitHubApp.res.js";
-import * as Belt_Option from "rescript/lib/es6/belt_Option.js";
-import * as Caml_option from "rescript/lib/es6/caml_option.js";
+import * as Belt_Option from "@rescript/runtime/lib/es6/Belt_Option.js";
+import * as Primitive_option from "@rescript/runtime/lib/es6/Primitive_option.js";
 
 function log(level, msg, data) {
-  var timestamp = new Date().toISOString();
-  var logObj = data !== undefined ? Js_dict.fromArray([
-          [
-            "timestamp",
-            timestamp
-          ],
-          [
-            "level",
-            level
-          ],
-          [
-            "message",
-            msg
-          ],
-          [
-            "data",
-            data
-          ]
-        ]) : Js_dict.fromArray([
-          [
-            "timestamp",
-            timestamp
-          ],
-          [
-            "level",
-            level
-          ],
-          [
-            "message",
-            msg
-          ]
-        ]);
+  let timestamp = new Date().toISOString();
+  let logObj = data !== undefined ? Js_dict.fromArray([
+      [
+        "timestamp",
+        timestamp
+      ],
+      [
+        "level",
+        level
+      ],
+      [
+        "message",
+        msg
+      ],
+      [
+        "data",
+        data
+      ]
+    ]) : Js_dict.fromArray([
+      [
+        "timestamp",
+        timestamp
+      ],
+      [
+        "level",
+        level
+      ],
+      [
+        "message",
+        msg
+      ]
+    ]);
   console.log(JSON.stringify(logObj));
 }
 
@@ -56,33 +56,33 @@ function error(msg, data) {
 }
 
 function extractPRInfo(payload) {
-  var obj = Js_json.decodeObject(payload);
+  let obj = Js_json.decodeObject(payload);
   if (obj === undefined) {
     return [
-            0,
-            "",
-            ""
-          ];
+      0,
+      "",
+      ""
+    ];
   }
-  var n = Js_dict.get(obj, "number");
-  var prNumber;
+  let n = Js_dict.get(obj, "number");
+  let prNumber;
   if (n !== undefined) {
-    var num = Js_json.decodeNumber(n);
+    let num = Js_json.decodeNumber(n);
     prNumber = num !== undefined ? num | 0 : 0;
   } else {
     prNumber = 0;
   }
-  var pr = Js_dict.get(obj, "pull_request");
-  var match;
+  let pr = Js_dict.get(obj, "pull_request");
+  let match;
   if (pr !== undefined) {
-    var prObj = Js_json.decodeObject(pr);
+    let prObj = Js_json.decodeObject(pr);
     if (prObj !== undefined) {
-      var b = Js_dict.get(prObj, "base");
-      var base;
+      let b = Js_dict.get(prObj, "base");
+      let base;
       if (b !== undefined) {
-        var baseObj = Js_json.decodeObject(b);
+        let baseObj = Js_json.decodeObject(b);
         if (baseObj !== undefined) {
-          var s = Js_dict.get(baseObj, "sha");
+          let s = Js_dict.get(baseObj, "sha");
           base = s !== undefined ? Belt_Option.getWithDefault(Js_json.decodeString(s), "") : "";
         } else {
           base = "";
@@ -90,12 +90,12 @@ function extractPRInfo(payload) {
       } else {
         base = "";
       }
-      var h = Js_dict.get(prObj, "head");
-      var head;
+      let h = Js_dict.get(prObj, "head");
+      let head;
       if (h !== undefined) {
-        var headObj = Js_json.decodeObject(h);
+        let headObj = Js_json.decodeObject(h);
         if (headObj !== undefined) {
-          var s$1 = Js_dict.get(headObj, "sha");
+          let s$1 = Js_dict.get(headObj, "sha");
           head = s$1 !== undefined ? Belt_Option.getWithDefault(Js_json.decodeString(s$1), "") : "";
         } else {
           head = "";
@@ -120,51 +120,51 @@ function extractPRInfo(payload) {
     ];
   }
   return [
-          prNumber,
-          match[0],
-          match[1]
-        ];
+    prNumber,
+    match[0],
+    match[1]
+  ];
 }
 
 function extractMRInfo(payload) {
-  var obj = Js_json.decodeObject(payload);
+  let obj = Js_json.decodeObject(payload);
   if (obj === undefined) {
     return [
-            0,
-            "",
-            ""
-          ];
+      0,
+      "",
+      ""
+    ];
   }
-  var attrs = Js_dict.get(obj, "object_attributes");
+  let attrs = Js_dict.get(obj, "object_attributes");
   if (attrs === undefined) {
     return [
-            0,
-            "",
-            ""
-          ];
+      0,
+      "",
+      ""
+    ];
   }
-  var attrsObj = Js_json.decodeObject(attrs);
+  let attrsObj = Js_json.decodeObject(attrs);
   if (attrsObj === undefined) {
     return [
-            0,
-            "",
-            ""
-          ];
+      0,
+      "",
+      ""
+    ];
   }
-  var n = Js_dict.get(attrsObj, "iid");
-  var mrIid;
+  let n = Js_dict.get(attrsObj, "iid");
+  let mrIid;
   if (n !== undefined) {
-    var num = Js_json.decodeNumber(n);
+    let num = Js_json.decodeNumber(n);
     mrIid = num !== undefined ? num | 0 : 0;
   } else {
     mrIid = 0;
   }
-  var refs = Js_dict.get(attrsObj, "diff_refs");
-  var baseSha;
+  let refs = Js_dict.get(attrsObj, "diff_refs");
+  let baseSha;
   if (refs !== undefined) {
-    var refsObj = Js_json.decodeObject(refs);
+    let refsObj = Js_json.decodeObject(refs);
     if (refsObj !== undefined) {
-      var s = Js_dict.get(refsObj, "base_sha");
+      let s = Js_dict.get(refsObj, "base_sha");
       baseSha = s !== undefined ? Belt_Option.getWithDefault(Js_json.decodeString(s), "") : "";
     } else {
       baseSha = "";
@@ -172,12 +172,12 @@ function extractMRInfo(payload) {
   } else {
     baseSha = "";
   }
-  var commit = Js_dict.get(attrsObj, "last_commit");
-  var headSha;
+  let commit = Js_dict.get(attrsObj, "last_commit");
+  let headSha;
   if (commit !== undefined) {
-    var commitObj = Js_json.decodeObject(commit);
+    let commitObj = Js_json.decodeObject(commit);
     if (commitObj !== undefined) {
-      var s$1 = Js_dict.get(commitObj, "id");
+      let s$1 = Js_dict.get(commitObj, "id");
       headSha = s$1 !== undefined ? Belt_Option.getWithDefault(Js_json.decodeString(s$1), "") : "";
     } else {
       headSha = "";
@@ -186,273 +186,311 @@ function extractMRInfo(payload) {
     headSha = "";
   }
   return [
-          mrIid,
-          baseSha,
-          headSha
-        ];
+    mrIid,
+    baseSha,
+    headSha
+  ];
 }
 
 function jsonResponse(data, statusOpt) {
-  var status = statusOpt !== undefined ? statusOpt : 200;
+  let status = statusOpt !== undefined ? statusOpt : 200;
   return new (globalThis.Response)(JSON.stringify(data), {
-              status: status,
-              headers: {
-                "Content-Type": "application/json"
-              }
-            });
+    status: status,
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
 }
 
 async function validateGitHubSignature(config, headers, body) {
-  var secret = config.githubWebhookSecret;
+  let secret = config.githubWebhookSecret;
   if (secret === undefined) {
-    return ;
+    if (Config.allowUnverifiedWebhooks()) {
+      return;
+    } else {
+      log("error", "GitHub webhook received but GITHUB_WEBHOOK_SECRET is not set", undefined);
+      return Primitive_option.some(new (globalThis.Response)(`{"error": "Server refuses unverified webhooks. Set GITHUB_WEBHOOK_SECRET."}`, {
+        status: 401
+      }));
+    }
   }
-  var signature = Belt_Option.getWithDefault(Js_dict.get(headers, "x-hub-signature-256"), "");
-  var valid = await Webhook.verifyGitHubSignature(body, signature, secret);
+  let signature = Belt_Option.getWithDefault(Js_dict.get(headers, "x-hub-signature-256"), "");
+  let valid = await Webhook.verifyGitHubSignature(body, signature, secret);
   if (!valid) {
-    error("Invalid GitHub webhook signature", undefined);
-    return Caml_option.some(new (globalThis.Response)("{\"error\": \"Invalid signature\"}", {
-                    status: 401
-                  }));
+    log("error", "Invalid GitHub webhook signature", undefined);
+    return Primitive_option.some(new (globalThis.Response)(`{"error": "Invalid signature"}`, {
+      status: 401
+    }));
   }
-  
 }
 
 async function handleGitHubWebhook(config, headers, body) {
-  var signatureError = await validateGitHubSignature(config, headers, body);
+  let signatureError = await validateGitHubSignature(config, headers, body);
   if (signatureError !== undefined) {
-    return Caml_option.valFromOption(signatureError);
+    return Primitive_option.valFromOption(signatureError);
   }
-  var parseResult;
+  let parseResult;
   try {
     parseResult = JSON.parse(body);
-  }
-  catch (exn){
+  } catch (exn) {
     parseResult = undefined;
   }
   if (parseResult === undefined) {
-    return new (globalThis.Response)("{\"error\": \"Invalid JSON\"}", {
-                status: 400
-              });
+    return new (globalThis.Response)(`{"error": "Invalid JSON"}`, {
+      status: 400
+    });
   }
-  var $$event = Webhook.parseGitHubEvent(headers, parseResult);
-  if ($$event !== undefined) {
-    info("GitHub event: " + $$event.eventType, Js_dict.fromArray([
+  let event = Webhook.parseGitHubEvent(headers, parseResult);
+  if (event !== undefined) {
+    log("info", `GitHub event: ` + event.eventType, Js_dict.fromArray([
+      [
+        "repo",
+        event.repository.owner + `/` + event.repository.name
+      ],
+      [
+        "action",
+        Belt_Option.getWithDefault(event.action, "")
+      ]
+    ]));
+    if (event.eventType === "pull_request") {
+      let action = Belt_Option.getWithDefault(event.action, "");
+      if (action === "opened" || action === "synchronize") {
+        let match = extractPRInfo(parseResult);
+        let headSha = match[2];
+        let prNumber = match[0];
+        let analysisResult = await Analysis.analyzeDiff(config.analysisEndpoint, event.repository.url, match[1], headSha);
+        let match$1;
+        if (analysisResult.TAG === "Ok") {
+          match$1 = [
+            Report.generatePRComment(analysisResult._0, config.mode),
+            true
+          ];
+        } else {
+          let err = analysisResult._0;
+          log("error", `Analysis failed`, Js_dict.fromArray([[
+              "reason",
+              err
+            ]]));
+          match$1 = [
+            Report.generateDegradedComment(err, config.mode),
+            false
+          ];
+        }
+        let analyserHealthy = match$1[1];
+        let comment = match$1[0];
+        let authResult = await GitHubApp.getAuthToken(config, parseResult);
+        if (authResult.TAG === "Ok") {
+          let token = authResult._0;
+          let postResult = await GitHubAPI.postPRComment(token, event.repository.owner, event.repository.name, prNumber, comment);
+          if (postResult.TAG === "Ok") {
+            log("info", `Posted PR comment`, Js_dict.fromArray([
               [
-                "repo",
-                $$event.repository.owner + "/" + $$event.repository.name
+                "pr",
+                prNumber
               ],
               [
-                "action",
-                Belt_Option.getWithDefault($$event.action, "")
+                "commentId",
+                postResult._0
+              ],
+              [
+                "degraded",
+                !analyserHealthy
               ]
             ]));
-    if ($$event.eventType === "pull_request") {
-      var action = Belt_Option.getWithDefault($$event.action, "");
-      if (action === "opened" || action === "synchronize") {
-        var match = extractPRInfo(parseResult);
-        var prNumber = match[0];
-        var analysisResult = await Analysis.analyzeDiff(config.analysisEndpoint, $$event.repository.url, match[1], match[2]);
-        var comment;
-        if (analysisResult.TAG === "Ok") {
-          comment = Report.generatePRComment(analysisResult._0, config.mode);
-        } else {
-          error("Analysis failed: " + analysisResult._0, undefined);
-          var analysis = Analysis.mockAnalysis();
-          comment = Report.generatePRComment(analysis, config.mode);
-        }
-        var authResult = await GitHubApp.getAuthToken(config, parseResult);
-        if (authResult.TAG === "Ok") {
-          var postResult = await GitHubAPI.postPRComment(authResult._0, $$event.repository.owner, $$event.repository.name, prNumber, comment);
-          if (postResult.TAG === "Ok") {
-            info("Posted PR comment", Js_dict.fromArray([
-                      [
-                        "pr",
-                        prNumber
-                      ],
-                      [
-                        "commentId",
-                        postResult._0
-                      ]
-                    ]));
           } else {
-            error("Failed to post PR comment: " + postResult._0, undefined);
+            log("error", `Failed to post PR comment: ` + postResult._0, undefined);
+          }
+          if (headSha !== "") {
+            let conclusion = analyserHealthy ? "success" : (
+                config.mode === "Regulator" ? "action_required" : "neutral"
+              );
+            let title = analyserHealthy ? "Oikos analysis complete" : "Oikos analysis unavailable";
+            let summary = analyserHealthy ? "See PR comment for eco/econ/quality scores." : "Analyser could not be reached. See PR comment for details.";
+            let checkResult = await GitHubAPI.createCheckRun(token, event.repository.owner, event.repository.name, headSha, "oikos", conclusion, title, summary);
+            if (checkResult.TAG !== "Ok") {
+              log("error", `Failed to create check run: ` + checkResult._0, undefined);
+            }
           }
         } else {
-          info("GitHub App not configured, comment not posted: " + authResult._0, comment);
+          log("info", `GitHub App not configured, comment not posted: ` + authResult._0, comment);
         }
       }
-      
     }
     return jsonResponse(Js_dict.fromArray([[
-                      "status",
-                      "processed"
-                    ]]), undefined);
+        "status",
+        "processed"
+      ]]), undefined);
   }
-  error("Failed to parse GitHub event", undefined);
-  return new (globalThis.Response)("{\"error\": \"Invalid event\"}", {
-              status: 400
-            });
+  log("error", "Failed to parse GitHub event", undefined);
+  return new (globalThis.Response)(`{"error": "Invalid event"}`, {
+    status: 400
+  });
 }
 
 function validateGitLabToken(config, headers) {
-  var secret = config.gitlabWebhookSecret;
+  let secret = config.gitlabWebhookSecret;
   if (secret === undefined) {
-    return ;
+    if (Config.allowUnverifiedWebhooks()) {
+      return;
+    } else {
+      log("error", "GitLab webhook received but GITLAB_WEBHOOK_SECRET is not set", undefined);
+      return Primitive_option.some(new (globalThis.Response)(`{"error": "Server refuses unverified webhooks. Set GITLAB_WEBHOOK_SECRET."}`, {
+        status: 401
+      }));
+    }
   }
-  var token = Belt_Option.getWithDefault(Js_dict.get(headers, "x-gitlab-token"), "");
+  let token = Belt_Option.getWithDefault(Js_dict.get(headers, "x-gitlab-token"), "");
   if (!Webhook.verifyGitLabToken(token, secret)) {
-    error("Invalid GitLab webhook token", undefined);
-    return Caml_option.some(new (globalThis.Response)("{\"error\": \"Invalid token\"}", {
-                    status: 401
-                  }));
+    log("error", "Invalid GitLab webhook token", undefined);
+    return Primitive_option.some(new (globalThis.Response)(`{"error": "Invalid token"}`, {
+      status: 401
+    }));
   }
-  
 }
 
 async function handleGitLabWebhook(config, headers, body) {
-  var tokenError = validateGitLabToken(config, headers);
+  let tokenError = validateGitLabToken(config, headers);
   if (tokenError !== undefined) {
-    return Caml_option.valFromOption(tokenError);
+    return Primitive_option.valFromOption(tokenError);
   }
-  var parseResult;
+  let parseResult;
   try {
     parseResult = JSON.parse(body);
-  }
-  catch (exn){
+  } catch (exn) {
     parseResult = undefined;
   }
   if (parseResult === undefined) {
-    return new (globalThis.Response)("{\"error\": \"Invalid JSON\"}", {
-                status: 400
-              });
+    return new (globalThis.Response)(`{"error": "Invalid JSON"}`, {
+      status: 400
+    });
   }
-  var $$event = Webhook.parseGitLabEvent(headers, parseResult);
-  if ($$event !== undefined) {
-    info("GitLab event: " + $$event.eventType, Js_dict.fromArray([[
-                "repo",
-                $$event.repository.owner + "/" + $$event.repository.name
-              ]]));
-    if ($$event.eventType === "Merge Request Hook") {
-      var match = extractMRInfo(parseResult);
-      var analysisResult = await Analysis.analyzeDiff(config.analysisEndpoint, $$event.repository.url, match[1], match[2]);
+  let event = Webhook.parseGitLabEvent(headers, parseResult);
+  if (event !== undefined) {
+    log("info", `GitLab event: ` + event.eventType, Js_dict.fromArray([[
+        "repo",
+        event.repository.owner + `/` + event.repository.name
+      ]]));
+    if (event.eventType === "Merge Request Hook") {
+      let match = extractMRInfo(parseResult);
+      let analysisResult = await Analysis.analyzeDiff(config.analysisEndpoint, event.repository.url, match[1], match[2]);
+      let comment;
       if (analysisResult.TAG === "Ok") {
-        var comment = Report.generatePRComment(analysisResult._0, config.mode);
-        info("Generated MR comment for MR !" + String(match[0]), comment);
+        comment = Report.generatePRComment(analysisResult._0, config.mode);
       } else {
-        error("Analysis failed: " + analysisResult._0, undefined);
-        var analysis = Analysis.mockAnalysis();
-        var comment$1 = Report.generatePRComment(analysis, config.mode);
-        info("Generated fallback MR comment", comment$1);
+        let err = analysisResult._0;
+        log("error", `Analysis failed`, Js_dict.fromArray([[
+            "reason",
+            err
+          ]]));
+        comment = Report.generateDegradedComment(err, config.mode);
       }
+      log("info", `Generated MR comment for MR !` + String(match[0]), comment);
     }
     return jsonResponse(Js_dict.fromArray([[
-                      "status",
-                      "processed"
-                    ]]), undefined);
+        "status",
+        "processed"
+      ]]), undefined);
   }
-  error("Failed to parse GitLab event", undefined);
-  return new (globalThis.Response)("{\"error\": \"Invalid event\"}", {
-              status: 400
-            });
+  log("error", "Failed to parse GitLab event", undefined);
+  return new (globalThis.Response)(`{"error": "Invalid event"}`, {
+    status: 400
+  });
 }
 
 function handler(config) {
-  return async function (req, _connInfo) {
-    var url = req.url;
-    var method = req.method;
-    var path = url.replace(/^https?:\/\/[^\/]+/, "");
+  return async (req, _connInfo) => {
+    let url = req.url;
+    let method = req.method;
+    let path = url.replace(/^https?:\/\/[^\/]+/, "");
     switch (method) {
       case "GET" :
-          switch (path) {
-            case "/health" :
-                return jsonResponse(Js_dict.fromArray([
-                                [
-                                  "status",
-                                  "healthy"
-                                ],
-                                [
-                                  "mode",
-                                  Config.modeToString(config.mode)
-                                ]
-                              ]), undefined);
-            case "/metrics" :
-                return jsonResponse(Js_dict.fromArray([
-                                [
-                                  "oikos_bot_requests_total",
-                                  0.0
-                                ],
-                                [
-                                  "oikos_bot_analyses_total",
-                                  0.0
-                                ]
-                              ]), undefined);
-            default:
-              return new (globalThis.Response)("Not Found", {
-                          status: 404
-                        });
-          }
+        switch (path) {
+          case "/health" :
+            return jsonResponse(Js_dict.fromArray([
+              [
+                "status",
+                "healthy"
+              ],
+              [
+                "mode",
+                Config.modeToString(config.mode)
+              ]
+            ]), undefined);
+          case "/metrics" :
+            return jsonResponse(Js_dict.fromArray([
+              [
+                "oikos_bot_requests_total",
+                0.0
+              ],
+              [
+                "oikos_bot_analyses_total",
+                0.0
+              ]
+            ]), undefined);
+          default:
+            return new (globalThis.Response)("Not Found", {
+              status: 404
+            });
+        }
       case "POST" :
-          switch (path) {
-            case "/webhooks/github" :
-                var body = await req.text();
-                var headers = req.headers;
-                return await handleGitHubWebhook(config, headers, body);
-            case "/webhooks/gitlab" :
-                var body$1 = await req.text();
-                var headers$1 = req.headers;
-                return await handleGitLabWebhook(config, headers$1, body$1);
-            default:
-              return new (globalThis.Response)("Not Found", {
-                          status: 404
-                        });
-          }
+        switch (path) {
+          case "/webhooks/github" :
+            let body = await req.text();
+            let headers = req.headers;
+            return await handleGitHubWebhook(config, headers, body);
+          case "/webhooks/gitlab" :
+            let body$1 = await req.text();
+            let headers$1 = req.headers;
+            return await handleGitLabWebhook(config, headers$1, body$1);
+          default:
+            return new (globalThis.Response)("Not Found", {
+              status: 404
+            });
+        }
       default:
         return new (globalThis.Response)("Not Found", {
-                    status: 404
-                  });
+          status: 404
+        });
     }
   };
 }
 
 function main() {
-  var config = Config.load();
+  let config = Config.load();
   if (config.TAG !== "Ok") {
-    return error("Failed to load config: " + config._0, undefined);
+    return log("error", `Failed to load config: ` + config._0, undefined);
   }
-  var config$1 = config._0;
-  info("Starting Oikos Bot", Js_dict.fromArray([
-            [
-              "port",
-              config$1.port
-            ],
-            [
-              "mode",
-              Config.modeToString(config$1.mode)
-            ]
-          ]));
+  let config$1 = config._0;
+  log("info", `Starting Oikos Bot`, Js_dict.fromArray([
+    [
+      "port",
+      config$1.port
+    ],
+    [
+      "mode",
+      Config.modeToString(config$1.mode)
+    ]
+  ]));
   Deno.serve({
-        port: config$1.port,
-        onListen: (function (param) {
-            info("Server listening on " + param.hostname + ":" + String(param.port), undefined);
-          })
-      }, handler(config$1));
+    port: config$1.port,
+    onListen: param => log("info", `Server listening on ` + param.hostname + `:` + String(param.port), undefined)
+  }, handler(config$1));
 }
 
 main();
 
 export {
-  log ,
-  info ,
-  error ,
-  extractPRInfo ,
-  extractMRInfo ,
-  jsonResponse ,
-  validateGitHubSignature ,
-  handleGitHubWebhook ,
-  validateGitLabToken ,
-  handleGitLabWebhook ,
-  handler ,
-  main ,
+  log,
+  info,
+  error,
+  extractPRInfo,
+  extractMRInfo,
+  jsonResponse,
+  validateGitHubSignature,
+  handleGitHubWebhook,
+  validateGitLabToken,
+  handleGitLabWebhook,
+  handler,
+  main,
 }
 /*  Not a pure module */

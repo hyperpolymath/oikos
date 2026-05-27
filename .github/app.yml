@@ -50,13 +50,14 @@ default_permissions:
 # Events that trigger the bot
 
 default_events:
-  - pull_request          # PR opened, closed, synchronized
-  - pull_request_review   # Reviews submitted
-  - push                  # Commits pushed (for main branch analysis)
-  - check_suite           # Check suite requested
-  - check_run             # Check run rerequested
-  - installation          # App installed/uninstalled
-  - issues                # Issue events for tracking
+  - pull_request          # PR opened, closed, synchronized — handled in Main.res
+  - push                  # Commits pushed — logged; no analysis trigger yet
+  # Events below are NOT yet handled. Re-add as Main.res grows:
+  #   - pull_request_review   # depends on a review-driven re-analysis path
+  #   - check_suite           # depends on a rerun-from-checks path
+  #   - check_run             # depends on a rerun-from-checks path
+  #   - installation          # depends on an install-time onboarding flow
+  #   - issues                # depends on an issue-policy backend
 
 # ============================================================================
 # ADDITIONAL SETTINGS
