@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MPL-2.0-or-later
+# Caddy reverse proxy — public TLS termination for OikosBot.
+# Install path: /etc/containers/systemd/caddy.container
+# Generated systemd unit: caddy.service (via Podman Quadlet).
+#
+# Caddy is the only container with public ports. The bot reaches it through
+# the private 'oikos' network and is unreachable from the public internet.
+
+[Unit]
+Description=Caddy reverse proxy for OikosBot
+Wants=network-online.target
+After=network-online.target
+# Caddy starts the network if it isn't up yet
+Requires=oikos-network.service
+After=oikos-network.service
+
+[Container]
+ContainerName=caddy
+# Pin to a specific Caddy major. Bump deliberately; do not float :latest.
+Image=docker.io/caddy:2.8-alpine
+AutoUpdate=registry
+
+# Only Caddy is exposed publicly
+PublishPort=80:80
+PublishPort=443:443
+PublishPort=443:443/udp
+
+Volume=/etc/oikosbot/Caddyfile:/etc/caddy/Caddyfile:ro,Z
+Volume=caddy-data.volume:/data
+Volume=/var/log/caddy:/var/log/caddy:Z
+
+Network=oikos.network
+EnvironmentFile=/etc/oikosbot/.env
+
+# Hardening
+NoNewPrivileges=true
+ReadOnly=true
+SecurityLabelType=container_runtime_t
+DropCapability=ALL
+AddCapability=NET_BIND_SERVICE
+
+[Service]
+Restart=always
+RestartSec=10
+# Wait for Caddy to be healthy before declaring the unit active
+TimeoutStartSec=120
+
+[Install]
+WantedBy=multi-user.target default.target
