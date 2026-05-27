@@ -1,0 +1,56 @@
+# SPDX-License-Identifier: MPL-2.0-or-later
+# OikosBot — the ReScript+Deno service that backs apps/oikosbot.
+# Install path: /etc/containers/systemd/oikosbot.container
+# Generated systemd unit: oikosbot.service (via Podman Quadlet).
+#
+# Not exposed on any host port. Caddy reaches it via the 'oikos' network at
+# oikosbot:3000.
+
+[Unit]
+Description=OikosBot — eco/econ code analysis bot
+Wants=network-online.target
+After=network-online.target
+Requires=oikos-network.service
+After=oikos-network.service
+
+[Container]
+ContainerName=oikosbot
+# Built locally from this repo's containers/Containerfile.
+# CI publishes to ghcr.io/hyperpolymath/oikosbot; pin to a digest in prod.
+# Example pinned form:
+#   Image=ghcr.io/hyperpolymath/oikosbot@sha256:<digest>
+Image=localhost/oikosbot:latest
+AutoUpdate=registry
+
+# No PublishPort — bot is only reachable via the oikos network from Caddy.
+
+EnvironmentFile=/etc/oikosbot/.env
+Environment=PORT=3000
+
+Network=oikos.network
+
+# The bot is stateless except for the in-memory installation-token cache.
+# A restart costs one round-trip to GitHub's /app/installations endpoint
+# per active installation — acceptable.
+ReadOnly=true
+# Deno needs /tmp writable for its disk cache
+Tmpfs=/tmp:rw,size=64m
+NoNewPrivileges=true
+DropCapability=ALL
+User=1000:1000
+
+# Healthcheck — Caddy probes the /health endpoint over the bot network.
+HealthCmd=deno eval "const r = await fetch('http://localhost:3000/health'); if (!r.ok) Deno.exit(1);"
+HealthInterval=30s
+HealthTimeout=10s
+HealthRetries=3
+HealthStartPeriod=20s
+
+[Service]
+Restart=always
+RestartSec=10
+# Bot startup is fast (<5s); give it room for a slow analyser DNS resolution
+TimeoutStartSec=90
+
+[Install]
+WantedBy=multi-user.target default.target
