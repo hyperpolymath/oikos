@@ -1,22 +1,29 @@
-// SPDX-License-Identifier: MPL-2.0-or-later
-= Oikos Roadmap
+// SPDX-License-Identifier: EUPL-1.2
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= Oikos — repository roadmap index
+Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+v2, 2026-05-27
+:icons: font
 
-== Current Status
+This repository contains *two separate products*. They each have their own
+roadmap.
 
-Initial development phase.
+[cols="1,3", options="header"]
+|===
+| Product | Roadmap
 
-== Milestones
+| *Oikos* (the DSL)
+| link:docs/ROADMAP.adoc[`docs/ROADMAP.adoc`] — typed compiler for stock-flow
+  consistent macroeconomic models.
+  Currently `v0.1.0-dev` scaffold; v0.3 milestone is blocked on the Ephapax
+  parser milestone.
 
-=== v0.1.0 - Foundation
-* [ ] Core functionality
-* [ ] Basic documentation
-* [ ] CI/CD pipeline
+| *OikosBot* (the GitHub App)
+| link:bot-integration/ROADMAP.md[`bot-integration/ROADMAP.md`] — code-analysis
+  bot at https://github.com/apps/oikosbot[`apps/oikosbot`].
+  v0.1 (hardened scaffold) just landed; v0.2 (first production install) is
+  blocked on a domain + deployment decision.
+|===
 
-=== v1.0.0 - Stable Release
-* [ ] Full feature set
-* [ ] Comprehensive tests
-* [ ] Production ready
-
-== Future Directions
-
-_To be determined based on community feedback._
+See link:docs/disambiguation/oikos-dsl-vs-oikosbot.adoc[`docs/disambiguation/oikos-dsl-vs-oikosbot.adoc`]
+for why these are different products despite the shared name.
