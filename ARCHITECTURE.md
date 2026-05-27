@@ -3,6 +3,15 @@
 
 # Oikos Bot: Ecological & Economic Code Analysis Platform
 
+> **Note — which product is this?**
+> This document describes **OikosBot**, the code-analysis GitHub/GitLab App
+> (sources in [`bot-integration/`](bot-integration/)).
+> The DSL of the same root name (a typed compiler for stock-flow consistent
+> macroeconomic models) is documented in [`README.adoc`](README.adoc) and
+> [`docs/DESIGN.adoc`](docs/DESIGN.adoc).
+> They share the οἶκος root but are otherwise unrelated.
+> See [`docs/disambiguation/oikos-dsl-vs-oikosbot.adoc`](docs/disambiguation/oikos-dsl-vs-oikosbot.adoc).
+
 ## Vision
 
 Oikos Bot is an intelligent code analysis platform that acts as a **consultant, advisor, regulator, and policy developer** for software repositories. It **complements** existing tools like Dependabot, CodeQL, and Copilot by adding a dedicated **ecological and economic lens** to code analysis.

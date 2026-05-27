@@ -14,6 +14,19 @@ image:https://api.thegreenwebfoundation.org/greencheckimage/github.com[Green Web
 
 *A typed DSL for stock-flow consistent macroeconomic modelling.*
 
+[IMPORTANT]
+====
+This repository contains *two separate products* that share the οἶκος root.
+This README is about *Oikos, the DSL* (a Rust compiler for SFC macro models).
+The other product is *OikosBot*, a code-analysis GitHub App, which lives in
+link:bot-integration/[`bot-integration/`] and is documented in
+link:ARCHITECTURE.md[`ARCHITECTURE.md`] and
+link:bot-integration/README.md[`bot-integration/README.md`].
+
+See link:docs/disambiguation/oikos-dsl-vs-oikosbot.adoc[the disambiguation
+note] for which-is-which.
+====
+
 Oikos provides a surface language for
 https://en.wikipedia.org/wiki/Stock-flow_consistent_model[stock-flow consistent (SFC)]
 macroeconomic models in the tradition of Godley & Lavoie (2007).
