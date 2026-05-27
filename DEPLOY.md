@@ -3,6 +3,13 @@
 
 # Oikos Bot Deployment Guide
 
+> **Looking for production?** The canonical production runbook is now at
+> [`containers/production/README.md`](containers/production/README.md) —
+> Podman Quadlet + Caddy on Hetzner, designed to live for years and survive
+> a deploy-target migration. This file (`DEPLOY.md`) covers the broader set
+> of dev-stack options (full compose with ArangoDB/Virtuoso/Prometheus/Grafana,
+> Kubernetes Helm, systemd-without-containers) and is kept for reference.
+
 ## Prerequisites
 
 ### Required

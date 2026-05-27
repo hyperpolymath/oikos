@@ -1,0 +1,79 @@
+# SPDX-License-Identifier: MPL-2.0-or-later
+# Caddy reverse proxy for OikosBot production deployment.
+#
+# Caddy handles:
+#   - TLS termination + automatic Let's Encrypt certificate renewal
+#   - HSTS, X-Frame-Options, and other baseline security headers
+#   - Rate limiting on the webhook endpoint
+#   - HTTP/2 + gzip
+#
+# All of {$BOT_DOMAIN}, {$BOT_ADMIN_EMAIL}, etc. come from /etc/oikosbot/.env
+# (loaded by the Caddy Quadlet unit). No secrets live in this file.
+
+{
+    email {$BOT_ADMIN_EMAIL}
+    # Skip the staging-CA flag in production. Uncomment for cert troubleshooting.
+    # acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+{$BOT_DOMAIN} {
+    # Baseline security headers. Tune per the GitHub App's actual surface.
+    header {
+        Strict-Transport-Security "max-age=63072000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "no-referrer"
+        Permissions-Policy "interest-cohort=()"
+        # Hide the upstream Deno fingerprint
+        -Server
+    }
+
+    encode gzip zstd
+
+    # Health probe — public, no rate limit. Used by uptime monitors.
+    handle /health {
+        reverse_proxy oikosbot:3000
+    }
+
+    # GitHub posts webhooks here. Cap at 60 req/min/IP to absorb retry storms
+    # but not legitimate burst traffic (a busy repo can produce ~10/min).
+    handle /webhooks/* {
+        rate_limit {
+            zone webhook {
+                key {client_ip}
+                events 60
+                window 1m
+            }
+        }
+        reverse_proxy oikosbot:3000 {
+            # GitHub waits 10s before treating a webhook as failed and retrying
+            transport http {
+                response_header_timeout 9s
+            }
+        }
+    }
+
+    # Metrics endpoint — never expose publicly. Returns 404 unless the request
+    # comes from the loopback (i.e. via SSH tunnel).
+    handle /metrics {
+        @loopback remote_ip 127.0.0.1 ::1
+        handle @loopback {
+            reverse_proxy oikosbot:3000
+        }
+        respond 404
+    }
+
+    # Anything else: forward to the bot. The bot itself returns 404 for unknown
+    # routes, which is the right behaviour (don't leak that Caddy is in front).
+    handle {
+        reverse_proxy oikosbot:3000
+    }
+
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 100mb
+            roll_keep 10
+        }
+        format json
+    }
+}
