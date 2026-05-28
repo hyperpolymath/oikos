@@ -24,7 +24,7 @@ in conversation — costs everyone time.
 
 | Primary artefact
 | A Rust compiler (`oikos-syntax`, `oikos-parser`, `oikos-desugar`, `oikos-check`).
-| A long-running service (ReScript + Deno + a Haskell analyser).
+| A long-running service (AffineScript port at `bot-integration-affine/`, in flight; previous ReScript implementation retired 2026-05-28) + a Haskell analyser.
 
 | Domain
 | Macroeconomics: stocks, flows, sectors, Godley matrices, fiscal periods.
@@ -32,15 +32,15 @@ in conversation — costs everyone time.
 
 | Lives at
 | Repo root: `Cargo.toml`, `oikos-*/` crates, `spec/`, `README.adoc`.
-| `bot-integration/`, plus `analyzers/`, `policy-engine/`, `ARCHITECTURE.md`.
+| `bot-integration-affine/`, plus `analyzers/`, `policy-engine/`, `ARCHITECTURE.md`.
 
 | Roadmap
 | link:../ROADMAP.adoc[`docs/ROADMAP.adoc`]
-| link:../../bot-integration/ROADMAP.md[`bot-integration/ROADMAP.md`]
+| Phase 5 scaffold landed in PR #35; follow-ups gated on AS stdlib `Json` v0.3 + http-capability-gateway externs.
 
 | Status (2026-05)
 | Scaffold; desugar blocked on Ephapax parser milestone.
-| Bot code present + hardened; *not deployed*; domain not registered.
+| AffineScript port scaffold; cross-module type-check + JSON payload extraction + HTTP-server accept loop pending upstream stdlib gates; *not deployed*; domain not registered.
 
 | Licence
 | EUPL-1.2
@@ -73,9 +73,9 @@ deployment surface.
 | "Oikos" when you mean the App
 | Avoid silent demotion — "Oikos" alone means the DSL.
 
-| `bot-integration/...` paths
+| `bot-integration-affine/...` paths
 | `oikos/...` when you mean bot files
-| File paths disambiguate without prose.
+| File paths disambiguate without prose. (Pre-2026-05-28 the bot lived at `bot-integration/`; see git history.)
 |===
 
 == If you came here because you were confused
@@ -85,8 +85,9 @@ Look at where you are in the repo:
 * In `README.adoc`, `Cargo.toml`, `oikos-syntax/`, `oikos-parser/`,
   `oikos-desugar/`, `oikos-check/`, `spec/`, `docs/DESIGN.adoc`,
   `docs/ROADMAP.adoc` → you're in the *DSL*.
-* In `bot-integration/`, `analyzers/`, `policy-engine/`, `ARCHITECTURE.md`,
-  `DEPLOY.md`, `docs/GITHUB_APP_SETUP.md` → you're in *OikosBot*.
+* In `bot-integration-affine/`, `analyzers/`, `policy-engine/`,
+  `ARCHITECTURE.md`, `DEPLOY.md`, `docs/GITHUB_APP_SETUP.md` →
+  you're in *OikosBot*.
 
 If a file straddles both (it shouldn't, but occasionally does), file an
 issue so we can split it.

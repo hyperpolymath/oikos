@@ -27,11 +27,6 @@ updates:
           - "minor"
           - "patch"
   
-  - package-ecosystem: "npm"
-    directory: "/bot-integration"
-    schedule:
-      interval: "weekly"
-  
   - package-ecosystem: "pip"
     directory: "/"
     schedule:

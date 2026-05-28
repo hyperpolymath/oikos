@@ -1,7 +1,0 @@
-# SPDX-License-Identifier: MPL-2.0-or-later
-# Persistent volume for Caddy's Let's Encrypt certificates and OCSP cache.
-# Losing this means a fresh ACME challenge on next boot — slow but not fatal.
-# Install path: /etc/containers/systemd/caddy-data.volume
-
-[Volume]
-VolumeName=caddy-data

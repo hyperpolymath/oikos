@@ -18,10 +18,17 @@ image:https://api.thegreenwebfoundation.org/greencheckimage/github.com[Green Web
 ====
 This repository contains *two separate products* that share the οἶκος root.
 This README is about *Oikos, the DSL* (a Rust compiler for SFC macro models).
-The other product is *OikosBot*, a code-analysis GitHub App, which lives in
-link:bot-integration/[`bot-integration/`] and is documented in
-link:ARCHITECTURE.md[`ARCHITECTURE.md`] and
-link:bot-integration/README.md[`bot-integration/README.md`].
+The other product is *OikosBot*, a code-analysis GitHub App. Its
+AffineScript port lives in
+link:bot-integration-affine/[`bot-integration-affine/`] and is
+documented in link:ARCHITECTURE.md[`ARCHITECTURE.md`]. The port is
+in-flight; cross-module type-checking, JSON payload extraction, and the
+HTTP server accept loop are gated on upstream AffineScript stdlib work
+(`Json` v0.3 RSR rewire + `http-capability-gateway` extern surfacing).
+
+The previous ReScript implementation in `bot-integration/` was retired
+on 2026-05-28 in favour of the AffineScript port (clean shutoff — see
+git history before that date for the prior code).
 
 See link:docs/disambiguation/oikos-dsl-vs-oikosbot.adoc[the disambiguation
 note] for which-is-which.

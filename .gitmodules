@@ -1,3 +1,0 @@
-[submodule "bot-integration/deps/rescript-wasm-runtime"]
-	path = bot-integration/deps/rescript-wasm-runtime
-	url = https://github.com/hyperpolymath/rescript-wasm-runtime.git

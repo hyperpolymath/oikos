@@ -19,10 +19,13 @@ roadmap.
   parser milestone.
 
 | *OikosBot* (the GitHub App)
-| link:bot-integration/ROADMAP.md[`bot-integration/ROADMAP.md`] — code-analysis
-  bot at https://github.com/apps/oikosbot[`apps/oikosbot`].
-  v0.1 (hardened scaffold) just landed; v0.2 (first production install) is
-  blocked on a domain + deployment decision.
+| AffineScript port at `bot-integration-affine/` — code-analysis bot at
+  https://github.com/apps/oikosbot[`apps/oikosbot`]. Phase 5 scaffold
+  landed in PR #35 (2026-05-28); the previous ReScript implementation
+  at `bot-integration/` was retired the same day. Cross-module
+  type-check, JSON payload extraction, and HTTP-server accept loop are
+  gated on upstream AffineScript stdlib work (`Json` v0.3 RSR rewire +
+  `http-capability-gateway` extern surfacing).
 |===
 
 See link:docs/disambiguation/oikos-dsl-vs-oikosbot.adoc[`docs/disambiguation/oikos-dsl-vs-oikosbot.adoc`]

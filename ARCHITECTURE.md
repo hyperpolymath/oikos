@@ -4,8 +4,11 @@
 # Oikos Bot: Ecological & Economic Code Analysis Platform
 
 > **Note — which product is this?**
-> This document describes **OikosBot**, the code-analysis GitHub/GitLab App
-> (sources in [`bot-integration/`](bot-integration/)).
+> This document describes **OikosBot**, the code-analysis GitHub/GitLab App.
+> Its AffineScript port lives in
+> [`bot-integration-affine/`](bot-integration-affine/) (in-flight; the
+> previous ReScript codebase at `bot-integration/` was retired on
+> 2026-05-28 — see git history for the prior implementation).
 > The DSL of the same root name (a typed compiler for stock-flow consistent
 > macroeconomic models) is documented in [`README.adoc`](README.adoc) and
 > [`docs/DESIGN.adoc`](docs/DESIGN.adoc).
