@@ -18,7 +18,10 @@ use smol_str::SmolStr;
 /// The token stream produced by the Logos lexer.
 #[derive(Logos, Debug, Clone, PartialEq)]
 #[logos(skip r"[ \t\r\n]+")]  // skip whitespace
-#[logos(skip r"--[^\n]*")]    // line comments: -- like Haskell/Lua
+// `[^\n]*` is intentionally greedy here — a line comment runs to the
+// next newline by definition. logos 0.16 added a heuristic warning for
+// unbounded greedy repetitions; `allow_greedy = true` opts in.
+#[logos(skip("--[^\n]*", allow_greedy = true))]
 pub enum Token {
     // ── Keywords (unit variants; #[token] beats #[regex] at equal length) ────
     #[token("model")]       KwModel,
