@@ -20,11 +20,13 @@ this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- feat(bot): `bot-integration-affine/` Phase 5 AffineScript scaffold (#35) — initial AS port of OikosBot; cross-module type-check, JSON payload extraction, and HTTP-server accept loop are gated on upstream `affinescript` stdlib work (Json v0.3 RSR rewire `affinescript#421` + Http server FFI `affinescript#425`).
 - feat: Oikos Bot v0.1.0-beta - TEA architecture with typed HTTP routing
 - feat: add GitHub App manifest for developer programme registration
 
 ### Fixed
 
+- fix(lexer): opt in to logos 0.16 `allow_greedy` for line-comment skip (#37) — `#[logos(skip("--[^\n]*", allow_greedy = true))]` replaces the unbounded greedy attribute that logos 0.16's new lint rejects.
 - fix(codeql): switch language matrix to 'actions' (no JS/TS in repo) (#23)
 - fix(codeql): switch language matrix to 'actions' (no JS/TS in repo) (#22)
 - fix(ci): sync hypatia-scan.yml to canonical (413: env.HOME+Phase-2+SARIF) (#20)
@@ -38,12 +40,16 @@ this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- chore(bot-integration): clean shutoff of the legacy ReScript `bot-integration/` (#41) — 208 files / -33,061 lines: removes `bot-integration/`, `containers/`, `.github/workflows/oikos.yml`, the `rescript:` job from `ci.yml`, the npm/bot-integration dependabot entry, and `.gitmodules`. README / ARCHITECTURE / ROADMAP / DEPLOY / disambiguation docs repointed at `bot-integration-affine/`. No production blast radius (`.github/app.yml` URLs were `*.example.com` placeholders).
+- chore(license): align stale SPDX headers + `Cargo.toml` manifest with `MPL-2.0` (#36) — completes the 2026-05-22 EUPL → MPL migration that had left 45 file headers + the manifest at `EUPL-1.2`.
+- chore(license): remove historical `LICENSES/EUPL-1.2.txt` (#40) — final cleanup of the EUPL transition artefact, deferred from #38 as a transition-period record.
 - refactor: convert TypeScript to JavaScript (language policy compliance)
 - refactor: complete eco-bot → oikos rename across all files
 - refactor: rename eco-bot to oikos, replace nerdctl with Svalinn/Vörðr
 
 ### Documentation
 
+- docs(license): DR-010 supersedes DR-002 — `MPL-2.0` adoption + README badge / paragraph flip (#38) — closes the 2026-05-22 LICENSE migration that lacked a Decision Record. Documents PMPL ↔ EUPL distribution-compatibility incoherence as the migration rationale.
 - docs(readme): add SPDX header and/or standard badges
 - docs: add manifest flow instructions to DEPLOY.md
 - docs(security): add SECURITY.md

@@ -4,35 +4,41 @@
 # STATE.a2ml — Oikos project state
 [metadata]
 project = "oikos"
-version = "0.0.1"
-last-updated = "2026-01-03"
+version = "0.1.0-dev"
+last-updated = "2026-05-28"
 status = "active"
-session = "converted from scheme — 2026-04-11"
+session = "2026-05-28 Phase 5 scaffold + legacy shutoff; upstream RSR rewires landed in affinescript"
 
 [project-context]
 name = "Oikos"
-purpose = """"""
-completion-percentage = 0
+purpose = "Two products: (1) the Oikos DSL — typed compiler for stock-flow-consistent macroeconomic models; (2) OikosBot — code-analysis GitHub App. See docs/disambiguation/oikos-dsl-vs-oikosbot.adoc."
+completion-percentage = 30
 
 [position]
-phase = "initial"   # design | implementation | testing | maintenance | archived
-maturity = "experimental"  # experimental | alpha | beta | production | lts
+phase = "implementation"   # design | implementation | testing | maintenance | archived
+maturity = "alpha"  # experimental | alpha | beta | production | lts
 
 [route-to-mvp]
 milestones = [
-  # No milestones recorded
+  { id = "phase-5-scaffold", status = "landed", pr = 35, summary = "OikosBot AffineScript scaffold at bot-integration-affine/" },
+  { id = "legacy-shutoff", status = "landed", pr = 41, summary = "Clean shutoff of ReScript bot-integration/ (-33,061 lines)" },
+  { id = "stdlib-json-v03", status = "landed-upstream", repo = "affinescript", pr = 421, summary = "stdlib/json.affine RSR rewire to hpm-json-rsr Zig FFI — unblocks OikosBot webhook payload extraction" },
+  { id = "stdlib-http-server", status = "landed-upstream", repo = "affinescript", pr = 425, summary = "stdlib/Http.affine RSR rewire — surfaces hpm-http-rsr Zig FFI server externs — unblocks OikosBot accept loop" },
+  { id = "bot-affine-implementation", status = "pending", summary = "Implement webhook handler + HMAC verification + dispatch in bot-integration-affine/ now that both stdlib gates are closed" },
+  { id = "dsl-v0.3-parser", status = "blocked", blocked-on = "ephapax", summary = "Oikos DSL v0.3 milestone depends on Ephapax parser" }
 ]
 
 [blockers-and-issues]
 issues = [
-  # No blockers recorded
+  { id = "github-actions-budget", severity = "operational", summary = "Required-checks gates BLOCKED on GH Actions budget exhaustion — PRs admin-merged per estate pattern" }
 ]
 
 [critical-next-actions]
 actions = [
-  # No actions recorded
+  { id = "bot-affine-webhook-handler", priority = "P1", summary = "Wire the AS-side webhook receiver in bot-integration-affine/ using Http server + Json stdlib externs" },
+  { id = "hpm-json-object-keys", priority = "P2", summary = "Add hpm_json_object_keys export to hpm-json-rsr Zig FFI to close the JObject materialisation gap in stdlib/json.affine to_json" }
 ]
 
 [maintenance-status]
-last-run-utc = "2026-01-03T00:00:00Z"
-last-result = "unknown"  # unknown | pass | warn | fail
+last-run-utc = "2026-05-28T11:00:00Z"
+last-result = "pass"  # unknown | pass | warn | fail
