@@ -1,4 +1,4 @@
-# SPDX-License-Identifier: EUPL-1.2
+# SPDX-License-Identifier: MPL-2.0
 # SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 
 [workspace]
@@ -14,7 +14,7 @@ members = [
 version    = "0.1.0"
 edition    = "2021"
 rust-version = "1.83"
-license    = "EUPL-1.2"
+license    = "MPL-2.0"
 authors    = ["Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>"]
 repository = "https://gitlab.com/hyperpolymath/oikos"
 keywords   = ["economics", "stock-flow-consistent", "macroeconomics", "dsl", "ephapax"]
