@@ -1,0 +1,124 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= bot-integration-affine — OikosBot webhook receiver (AffineScript port)
+:toc: macro
+:toclevels: 2
+
+*AffineScript port of the OikosBot webhook receiver, replacing the
+legacy ReScript implementation at `oikos/bot-integration/`.*
+
+Phase 5 of the RSR-stack adoption. Consumes the composite Phase 4
+library `libhpm_github_api.so` (which itself composes `libhpm_crypto`,
+`libhpm_http_client`, `libhpm_json`) through AS's `extern fn` mechanism.
+
+toc::[]
+
+== Architecture
+
+[source]
+----
+  inbound webhook
+        │
+        ▼
+  ┌──────────────────────────────────────────┐
+  │  hpm_http_server (capability-gateway)    │  ← Phase 2
+  └─────────────────┬────────────────────────┘
+                    │
+                    ▼
+  ┌──────────────────────────────────────────┐
+  │       bot-integration-affine             │
+  │   Main / Router / Webhook / Oikos        │  ← Phase 5
+  └─────────────────┬────────────────────────┘
+                    │ extern fn hpm_github_*
+                    ▼
+  ┌──────────────────────────────────────────┐
+  │     libhpm_github_api.so                 │  ← Phase 4 (composite)
+  └──┬──────────────┬─────────────┬──────────┘
+     │              │             │
+  libhpm_crypto  libhpm_http   libhpm_json    ← Phases 1 / 3a / 3b
+----
+
+== Module layout
+
+`src/Externs.affine`::
+  Per-package shim (see AffineScript convention Q4). Declares
+  `extern fn hpm_github_app_*` and the high-level REST ops as
+  AS `pub extern fn` named after the C ABI symbols. All other
+  modules in this package `use Externs` rather than redeclaring.
+
+`src/Types.affine`::
+  Record types: `config`, `installation_token`, `webhook_event`,
+  `repository_info`, `bot_mode`. Mirrors ReScript `Types.res`.
+
+`src/Config.affine`::
+  Env-var loading (PORT, BOT_MODE, GITHUB_APP_ID, GITHUB_PRIVATE_KEY,
+  GITHUB_WEBHOOK_SECRET, GITLAB_WEBHOOK_SECRET, ANALYSIS_ENDPOINT).
+
+`src/Webhook.affine`::
+  HMAC-SHA256 webhook signature verification (constant-time via
+  `hmac_sha256_verify`) + payload parsing.
+
+`src/Router.affine`::
+  Path dispatch: `/health`, `/webhooks/github`, `/webhooks/gitlab`,
+  `/metrics`.
+
+`src/Analysis.affine`::
+  Invokes `oikos-check` against the changed-files diff.
+
+`src/Report.affine`::
+  Formats analysis result as Markdown for PR comments.
+
+`src/Oikos.affine`::
+  Top-level orchestration: webhook → analyse → comment.
+
+`src/Main.affine`::
+  Process entry point. Loads config, binds the HTTP server, dispatches
+  to Router.
+
+== Build
+
+The AffineScript compiler emits the bot to a backend chosen at build
+time. Default target is the Deno backend (matches the legacy ReScript
+implementation), with Wasm-on-WasmGC as a follow-up target.
+
+[source,shell]
+----
+# Build the three RSR siblings + the Phase 4 composite first
+( cd ../../hpm-crypto-rsr/ffi/zig          && zig build )
+( cd ../../hpm-http-client-rsr/ffi/zig     && zig build )
+( cd ../../hpm-json-rsr/ffi/zig            && zig build )
+( cd ../../hpm-github-api-rsr/ffi/zig      && zig build )
+
+# Set LD_LIBRARY_PATH so libhpm_github_api.so can find its siblings
+export LD_LIBRARY_PATH="\
+$PWD/../../hpm-crypto-rsr/ffi/zig/zig-out/lib:\
+$PWD/../../hpm-http-client-rsr/ffi/zig/zig-out/lib:\
+$PWD/../../hpm-json-rsr/ffi/zig/zig-out/lib:\
+$PWD/../../hpm-github-api-rsr/ffi/zig/zig-out/lib"
+
+# (To be added once an affinescript wrapper script exists in this repo)
+# affinescript build --target deno src/Main.affine
+----
+
+== Environment
+
+[cols="2,5"]
+|===
+| `PORT` | TCP port to bind (default `3000`).
+| `BOT_MODE` | `consultant` / `advisor` / `regulator` (default `advisor`).
+| `GITHUB_APP_ID` | Numeric App ID (string-encoded).
+| `GITHUB_PRIVATE_KEY` | PKCS#8 PEM. Required for posting comments / check-runs.
+| `GITHUB_WEBHOOK_SECRET` | Shared secret for HMAC verification.
+| `GITLAB_WEBHOOK_SECRET` | Shared secret for GitLab token verification.
+| `ANALYSIS_ENDPOINT` | `oikos-check` analyser endpoint (default `http://localhost:8080/analyze`).
+| `OIKOS_ALLOW_UNVERIFIED_WEBHOOKS` | DEV ONLY. `true` skips HMAC verification. NEVER set in production.
+|===
+
+== Licence
+
+MPL-2.0. See link:../LICENSE[../LICENSE] (oikos top-level).
+
+== Status
+
+Initial scaffold — module skeletons + Externs shim. Full port follows
+the ReScript reference at `../bot-integration/src/*.res`.

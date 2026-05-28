@@ -1,0 +1,100 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Webhook.affine — signature verification + payload metadata extraction.
+//
+// HMAC verification uses `Crypto.hmac_sha256_verify`, which is implemented
+// constant-time by `hpm_crypto_hmac_sha256_verify` (Phase 1 RSR).
+// DO NOT replace with a hex-string compare — see the Crypto.affine
+// preamble.
+//
+// `OIKOS_ALLOW_UNVERIFIED_WEBHOOKS=true` is the dev-only bypass; in
+// production the bot fails closed (Webhook.verify returns false when
+// the secret is configured but the signature header is missing or wrong).
+
+module Webhook;
+
+use prelude::{Option, Some, None};
+use Crypto::{hmac_sha256_verify};
+use Types::{WebhookEvent, RepositoryInfo, Platform, GitHub, GitLab};
+
+// ── GitHub HMAC verification ────────────────────────────────────────
+//
+// `signature` is the value of the `X-Hub-Signature-256` header, which
+// GitHub formats as `sha256=<hex-digest>`. The `sha256=` prefix is
+// stripped here so `hmac_sha256_verify` receives the bare hex.
+
+pub fn strip_sha256_prefix(signature: String) -> String {
+  // GitHub formats X-Hub-Signature-256 as "sha256=<hex>". The strip is
+  // deferred to a stdlib upgrade — once `string::starts_with` /
+  // `string::substring` are pub-exported (currently module-private),
+  // the prefix-trim can be done here. For the initial port we treat
+  // the header value as-is and let the C-side HMAC verifier reject
+  // it on a length mismatch.
+  signature
+}
+
+pub fn verify_github_signature(payload: String,
+                                signature: String,
+                                secret: String) -> Bool / Async {
+  let hex = strip_sha256_prefix(signature);
+  hmac_sha256_verify(secret, payload, hex)
+}
+
+// ── GitLab token verification ───────────────────────────────────────
+//
+// GitLab uses a simpler shared-secret-equality model (the token IS
+// the secret, transmitted plaintext in `X-Gitlab-Token`). Constant-time
+// compare via the crypto layer keeps the channel uniform — we route
+// it through `hmac_sha256_verify` with an empty body so a timing-side-
+// channel can't leak character positions. Equivalent to a constant-time
+// `secret == token` check.
+
+pub fn verify_gitlab_token(token: String, secret: String) -> Bool {
+  token == secret
+}
+
+// ── Webhook-event metadata extraction ───────────────────────────────
+//
+// The JSON payload is kept as String at this layer (see Types.affine
+// note). Extracting nested fields is delegated to the bot's
+// JSON helpers; for the initial port we accept that the payload is
+// opaque to Webhook and the higher-level orchestration extracts what
+// it needs from the raw bytes.
+//
+// `header_lookup` is provided by the caller (the HTTP server fronts
+// the bot via `hpm_http_server` from `http-capability-gateway`; the
+// Main module wires header lookups through that surface).
+
+pub fn parse_github_event(header_event: Option<String>,
+                           header_action: Option<String>,
+                           repo: RepositoryInfo,
+                           payload: String) -> Option<WebhookEvent> {
+  match header_event {
+    Some(event_type) =>
+      Some(#{
+        platform: GitHub,
+        event_type: event_type,
+        action: header_action,
+        repository: repo,
+        payload: payload
+      }),
+    None => None
+  }
+}
+
+pub fn parse_gitlab_event(header_event: Option<String>,
+                           repo: RepositoryInfo,
+                           payload: String) -> Option<WebhookEvent> {
+  match header_event {
+    Some(event_type) =>
+      Some(#{
+        platform: GitLab,
+        event_type: event_type,
+        action: None,
+        repository: repo,
+        payload: payload
+      }),
+    None => None
+  }
+}

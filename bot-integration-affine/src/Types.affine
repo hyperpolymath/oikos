@@ -1,0 +1,95 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Types.affine — record types for the bot.
+//
+// Mirrors the ReScript reference at `oikos/bot-integration/src/Types.res`.
+// Field names are snake_case (AS canonical face); the ReScript camelCase
+// originals are noted in comments where the divergence is non-obvious.
+
+module Types;
+
+use prelude::{Option};
+
+// ── Bot mode ────────────────────────────────────────────────────────
+
+pub type BotMode =
+  | Consultant   // Answers questions, provides alternatives
+  | Advisor      // Proactive suggestions on PRs
+  | Regulator    // Enforces policy compliance
+
+// ── Source-control platform ─────────────────────────────────────────
+
+pub type Platform =
+  | GitHub
+  | GitLab
+
+// ── Webhook payload metadata ────────────────────────────────────────
+
+pub type RepositoryInfo = {
+  owner: String,
+  name: String,
+  url: String,
+}
+
+pub type WebhookEvent = {
+  platform: Platform,
+  event_type: String,
+  action: Option[String],
+  repository: RepositoryInfo,
+  // The raw JSON payload is kept as a String here (rather than a
+  // parsed AST) because the AS Json surface is still settling and the
+  // bot uses domain-specific extractors that re-parse from the
+  // original string anyway. Revisit when stdlib/json.affine v0.3 lands.
+  payload: String,
+}
+
+// ── GitHub App auth ─────────────────────────────────────────────────
+
+pub type InstallationToken = {
+  token: String,
+  // Unix timestamp in milliseconds, matching the ReScript reference's
+  // `expiresAt` field. Names mapped to snake_case per canonical face.
+  expires_at: Float,
+}
+
+// ── Configuration ───────────────────────────────────────────────────
+
+pub type Config = {
+  port: Int,
+  mode: BotMode,
+  analysis_endpoint: String,
+  github_webhook_secret: Option[String],
+  gitlab_webhook_secret: Option[String],
+  github_app_id: Option[String],
+  github_private_key: Option[String],
+  allow_unverified_webhooks: Bool,   // DEV ONLY (`OIKOS_ALLOW_UNVERIFIED_WEBHOOKS`)
+}
+
+// ── Severity / priority (used by Report) ────────────────────────────
+
+pub type Severity =
+  | Blocking
+  | High
+  | Medium
+  | Low
+  | Info
+
+pub type Priority =
+  | PriorityHigh
+  | PriorityMedium
+  | PriorityLow
+
+// ── Analyser output ─────────────────────────────────────────────────
+//
+// Subset of ReScript Types.res's analysis surface — kept tight for the
+// initial port. The full eco / econ / quality breakdown follows once
+// the Analysis module needs them.
+
+pub type HealthIndex = {
+  eco: Float,
+  econ: Float,
+  quality: Float,
+  total: Float,
+  grade: String,
+}

@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Router.affine — path / method dispatch for the bot HTTP surface.
+//
+// Routes:
+//   GET  /health          → liveness + mode
+//   POST /webhooks/github → GitHub webhook receiver
+//   POST /webhooks/gitlab → GitLab webhook receiver
+//   GET  /metrics         → OpenTelemetry counters
+//   *                    → 404
+
+module Router;
+
+use prelude::{Option, Some, None};
+use Types::{Config};
+use Config::{mode_to_string};
+
+pub type Route =
+  | Health
+  | GitHubWebhook
+  | GitLabWebhook
+  | Metrics
+  | NotFound
+
+pub type HttpResponse = {
+  status: Int,
+  content_type: String,
+  body: String
+}
+
+// ── Route classification ────────────────────────────────────────────
+
+pub fn classify(method: String, path: String) -> Route {
+  match (method, path) {
+    ("GET",  "/health")           => Health,
+    ("POST", "/webhooks/github")  => GitHubWebhook,
+    ("POST", "/webhooks/gitlab")  => GitLabWebhook,
+    ("GET",  "/metrics")          => Metrics,
+    _                             => NotFound
+  }
+}
+
+// ── Health-check response ───────────────────────────────────────────
+
+pub fn health_response(config: Config) -> HttpResponse {
+  let body = "{\"status\":\"healthy\",\"mode\":\"" ++ mode_to_string(config.mode) ++ "\"}";
+  #{ status: 200, content_type: "application/json", body: body }
+}
+
+// ── Metrics (placeholder OTLP-ish counters) ─────────────────────────
+
+pub fn metrics_response() -> HttpResponse {
+  let body = "{\"oikos_bot_requests_total\":0,\"oikos_bot_analyses_total\":0}";
+  #{ status: 200, content_type: "application/json", body: body }
+}
+
+// ── 404 ─────────────────────────────────────────────────────────────
+
+pub fn not_found_response() -> HttpResponse {
+  #{ status: 404, content_type: "text/plain", body: "Not Found" }
+}

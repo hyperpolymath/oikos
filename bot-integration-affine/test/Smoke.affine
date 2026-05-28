@@ -1,0 +1,26 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Smoke.affine — minimal compile/parse smoke test for bot-integration-affine.
+//
+// Exercises the externs surface declared in `Externs.affine` against
+// the Phase 4 C ABI symbols. This file's only job is to fail to
+// parse / type-check if the externs surface drifts; it does not
+// invoke the runtime FFI (which requires libhpm_github_api.so on
+// LD_LIBRARY_PATH).
+
+module Smoke;
+
+use prelude::{Option, Some, None};
+use Externs::{generate_jwt, token_free, token_bytes, GitHubToken};
+
+// Returns the JWT bytes for a known-shape input. Used as a
+// `check`-only fixture: if Externs's surface ever changes, this
+// call site won't type-check.
+
+pub fn build_test_jwt(app_id: String, pem: String) -> String / Async {
+  let jwt = generate_jwt(app_id, pem, 60);
+  let bytes = token_bytes(jwt);
+  token_free(jwt);
+  bytes
+}

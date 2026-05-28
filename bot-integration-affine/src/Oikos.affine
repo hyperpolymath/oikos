@@ -1,0 +1,72 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Oikos.affine — top-level orchestration.
+//
+// Glues Webhook → Analysis → Report → Externs.post_pr_comment into one
+// callable. Ports the orchestration logic out of Main.res's giant
+// `handleGitHubWebhook` so Main.affine can stay focused on routing.
+
+module Oikos;
+
+use prelude::{Option, Some, None, Result, Ok, Err};
+use Externs::{GitHubToken, GitHubResponse, generate_jwt, get_installation_token, post_pr_comment, token_free, response_free, response_status};
+use Types::{Config, BotMode};
+use Analysis::{analyze_diff, mock_health};
+use Report::{generate_pr_comment};
+
+// ── Auth helper ─────────────────────────────────────────────────────
+//
+// Two-step GitHub App auth: app credentials → JWT → installation token.
+// `installation_id` is extracted from the webhook payload at the
+// caller; passing it explicitly here keeps Oikos independent of
+// payload shape.
+
+pub fn get_auth_token(config: Config,
+                       installation_id: Int) -> Result<GitHubToken, String> / Async {
+  match (config.github_app_id, config.github_private_key) {
+    (Some(app_id), Some(pem)) => {
+      let jwt = generate_jwt(app_id, pem, 600);
+      let token = get_installation_token(jwt, installation_id);
+      token_free(jwt);
+      Ok(token)
+    },
+    _ => Err("GitHub App credentials not configured")
+  }
+}
+
+// ── PR-comment flow ─────────────────────────────────────────────────
+//
+// 1. Run the analyser against (base_sha .. head_sha)
+// 2. Format the result as Markdown via Report
+// 3. POST the comment to GitHub
+// 4. Free the response handle regardless of status
+
+pub fn handle_pr_event(config: Config,
+                        installation_id: Int,
+                        owner: String,
+                        repo_name: String,
+                        repo_url: String,
+                        pr_number: Int,
+                        base_sha: String,
+                        head_sha: String) -> Result<Int, String> / { Net, Async } {
+  match get_auth_token(config, installation_id) {
+    Err(msg) => Err("auth: " ++ msg),
+    Ok(token) => {
+      let health = match analyze_diff(config.analysis_endpoint, repo_url, base_sha, head_sha) {
+        Ok(h) => h,
+        Err(_) => mock_health()
+      };
+      let comment_body = generate_pr_comment(health, config.mode);
+      let resp = post_pr_comment(token, owner, repo_name, pr_number, comment_body);
+      let status = response_status(resp);
+      response_free(resp);
+      token_free(token);
+      if status >= 200 && status < 300 {
+        Ok(status)
+      } else {
+        Err("post_pr_comment status " ++ int_to_string(status))
+      }
+    }
+  }
+}

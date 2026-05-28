@@ -1,0 +1,68 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Report.affine — render analysis output as Markdown.
+//
+// Ports `oikos/bot-integration/src/Report.res`. Output goes through
+// `Externs.post_pr_comment` which forwards to `libhpm_github_api.so`.
+// JSON-escaping of comment-body content is handled inside the C ABI
+// (`hpm_json_escape_string` from libhpm_json), so the Markdown here
+// can contain arbitrary characters safely.
+
+module Report;
+
+use Types::{HealthIndex, BotMode, Consultant, Advisor, Regulator};
+
+// ── Grade emoji ─────────────────────────────────────────────────────
+//
+// Concise visual signal at the top of every PR comment. Kept ASCII-safe
+// (no actual emoji glyphs) — the leading character set survives
+// transit through GitHub's Markdown sanitiser without surprises.
+
+pub fn grade_to_label(grade: String) -> String {
+  match grade {
+    "A" => "[A — excellent]",
+    "B" => "[B — good]",
+    "C" => "[C — adequate]",
+    "D" => "[D — needs work]",
+    "F" => "[F — blocking]",
+    _   => "[? — ungraded]"
+  }
+}
+
+// ── Mode-specific framing ───────────────────────────────────────────
+//
+// Each bot mode opens the comment with a different verb:
+//   Consultant — "Here's what I see..."
+//   Advisor    — "Suggestion:"
+//   Regulator  — "Policy review:"
+
+pub fn mode_preamble(mode: BotMode) -> String {
+  match mode {
+    Consultant => "## Oikos consultant — analysis\n\n",
+    Advisor    => "## Oikos advisor — suggestions\n\n",
+    Regulator  => "## Oikos regulator — policy review\n\n"
+  }
+}
+
+// ── PR comment generator ────────────────────────────────────────────
+
+pub fn generate_pr_comment(health: HealthIndex, mode: BotMode) -> String {
+  // `label` and `total` are reserved in AffineScript; this module
+  // uses `grade_label` and `health_total` to sidestep the parser.
+  let preamble: String = mode_preamble(mode);
+  let grade_label: String = grade_to_label(health.grade);
+  let health_total: String = float_to_string(health.total);
+  let eco_s: String = float_to_string(health.eco);
+  let econ_s: String = float_to_string(health.econ);
+  let quality_s: String = float_to_string(health.quality);
+
+  preamble
+    ++ "**Health: " ++ grade_label ++ "** — total " ++ health_total ++ "\n\n"
+    ++ "| Dimension | Score |\n"
+    ++ "|-----------|-------|\n"
+    ++ "| Eco       | " ++ eco_s ++ " |\n"
+    ++ "| Econ      | " ++ econ_s ++ " |\n"
+    ++ "| Quality   | " ++ quality_s ++ " |\n"
+    ++ "\n_Posted by OikosBot via the Hyperpolymath RSR stack._"
+}

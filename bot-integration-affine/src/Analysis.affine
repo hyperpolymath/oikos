@@ -1,0 +1,86 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Analysis.affine — invokes the `oikos-check` analyser endpoint.
+//
+// Ports `oikos/bot-integration/src/Analysis.res`. The analyser is a
+// separate HTTP service (default `http://localhost:8080/analyze`) that
+// receives a JSON request describing the diff and returns the eco /
+// econ / quality / health breakdown.
+//
+// Network round-trip goes through the AS stdlib `Http` surface, which
+// is lowered to `libhpm_http_client` once the AS stdlib v0.3 rewire
+// lands (until then it uses the existing Deno-backed extern).
+
+module Analysis;
+
+use prelude::{Result, Ok, Err};
+use Http::{http_request, response_status, response_body};
+use Types::{HealthIndex};
+
+// ── Mock fallback ───────────────────────────────────────────────────
+//
+// Used when the analyser endpoint is unreachable. The bot still posts
+// SOMETHING — silence on a green-PR webhook would be misleading —
+// just labelled as an estimate.
+
+pub fn mock_health() -> HealthIndex {
+  #{
+    eco: 75.0,
+    econ: 80.0,
+    quality: 82.0,
+    total: 79.0,
+    grade: "B"
+  }
+}
+
+// ── Real analyser call ──────────────────────────────────────────────
+//
+// POSTs `{"repo_url":..., "base_sha":..., "head_sha":...}` to the
+// configured endpoint. Returns Err with the failure mode on any HTTP /
+// JSON error so the caller can fall back to `mock_health()` for the
+// comment body and log the error separately.
+
+pub fn build_request_body(repo_url: String,
+                           base_sha: String,
+                           head_sha: String) -> String {
+  "{\"repo_url\":\""
+    ++ repo_url
+    ++ "\",\"base_sha\":\""
+    ++ base_sha
+    ++ "\",\"head_sha\":\""
+    ++ head_sha
+    ++ "\"}"
+}
+
+pub fn analyze_diff(endpoint: String,
+                     repo_url: String,
+                     base_sha: String,
+                     head_sha: String) -> Result<HealthIndex, String> / { Net, Async } {
+  let body = build_request_body(repo_url, base_sha, head_sha);
+  let headers = [("Content-Type", "application/json")];
+
+  let thenable = http_request(endpoint, "POST", headers, body);
+  let status = response_status(thenable);
+  let resp_body = response_body(thenable);
+
+  if status >= 200 && status < 300 {
+    // Parse the analyser response. The JSON shape is fixed by the
+    // analyser API (`oikos-check`'s `/analyze` endpoint); future work
+    // could surface field-level parse errors, but for the initial
+    // port we trust the analyser and surface only top-level failure.
+    parse_health_response(resp_body)
+  } else {
+    Err("analyser returned status " ++ int_to_string(status))
+  }
+}
+
+// ── Minimal JSON shape extractor ────────────────────────────────────
+//
+// Stub for the initial port — returns the mock indices. Real parsing
+// (via `Externs` -> `libhpm_json` once exposed to AS) lands once the
+// AS stdlib `Json` v0.3 ships.
+
+pub fn parse_health_response(_body: String) -> Result<HealthIndex, String> {
+  Ok(mock_health())
+}

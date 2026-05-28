@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Main.affine — entry point.
+//
+// Loads config, opens a listening socket via `http_server_listen`
+// (from `http-capability-gateway`'s Phase 2 FFI), and dispatches each
+// request through `Router`. Webhook routes additionally run signature
+// verification via `Webhook` before handing off to `Oikos`.
+//
+// Termination: this entry returns on SIGINT; the listener handle is
+// dropped, which closes the socket. No background tasks.
+
+module Main;
+
+use prelude::{Option, Some, None, Result, Ok, Err};
+use Types::{Config};
+use Config::{load, mode_to_string};
+use Router::{classify, health_response, metrics_response, not_found_response, Route, Health, GitHubWebhook, GitLabWebhook, Metrics, NotFound, HttpResponse};
+use Webhook::{verify_github_signature, verify_gitlab_token};
+
+// ── Logging ─────────────────────────────────────────────────────────
+//
+// Structured JSON logs, one event per line. Production telemetry
+// pipelines (Vector / OTel collector) ingest them by field; the
+// human-readable timestamp + level prefix matter less than the
+// structure.
+
+pub fn log_info(msg: String) -> () / IO {
+  println("{\"level\":\"info\",\"msg\":\"" ++ msg ++ "\"}")
+}
+
+pub fn log_error(msg: String) -> () / IO {
+  eprintln("{\"level\":\"error\",\"msg\":\"" ++ msg ++ "\"}")
+}
+
+// ── Health-check + 404 dispatchers ──────────────────────────────────
+
+pub fn dispatch_simple(route: Route, config: Config) -> Option<HttpResponse> {
+  match route {
+    Health    => Some(health_response(config)),
+    Metrics   => Some(metrics_response()),
+    NotFound  => Some(not_found_response()),
+    _         => None
+  }
+}
+
+// ── GitHub webhook handler ──────────────────────────────────────────
+//
+// Verifies HMAC if a secret is configured (or the dev-only escape
+// hatch `OIKOS_ALLOW_UNVERIFIED_WEBHOOKS=true` is set), then hands the
+// raw body off to Oikos.handle_pr_event. The webhook-payload field
+// extractors (installation.id, pull_request.number, etc.) are
+// expected to be added via small helpers as the bot ingests real
+// payloads; the initial port returns 202 ACCEPTED without invoking
+// the orchestrator unless the necessary fields are surfaced.
+
+pub fn handle_github_webhook(config: Config,
+                              signature_header: Option<String>,
+                              body: String) -> HttpResponse / { Net, Async, IO } {
+  let verified = match (config.github_webhook_secret, signature_header) {
+    (Some(secret), Some(sig)) => verify_github_signature(body, sig, secret),
+    (Some(_), None)           => false,
+    (None, _)                 => config.allow_unverified_webhooks
+  };
+
+  if !verified {
+    log_error("github webhook: signature verification failed");
+    #{ status: 401, content_type: "application/json", body: "{\"error\":\"invalid signature\"}" }
+  } else {
+    log_info("github webhook accepted (orchestration not yet wired)");
+    #{ status: 202, content_type: "application/json", body: "{\"status\":\"accepted\"}" }
+  }
+}
+
+pub fn handle_gitlab_webhook(config: Config,
+                              token_header: Option<String>,
+                              _body: String) -> HttpResponse / IO {
+  let verified = match (config.gitlab_webhook_secret, token_header) {
+    (Some(secret), Some(tok)) => verify_gitlab_token(tok, secret),
+    (Some(_), None)           => false,
+    (None, _)                 => config.allow_unverified_webhooks
+  };
+
+  if !verified {
+    log_error("gitlab webhook: token verification failed");
+    #{ status: 401, content_type: "application/json", body: "{\"error\":\"invalid token\"}" }
+  } else {
+    log_info("gitlab webhook accepted (orchestration not yet wired)");
+    #{ status: 202, content_type: "application/json", body: "{\"status\":\"accepted\"}" }
+  }
+}
+
+// ── Entry point ─────────────────────────────────────────────────────
+//
+// Imports for the actual `serve` mechanism land once the AS Net effect
+// surfaces `http_server_listen` via the http-capability-gateway FFI.
+
+pub fn main() -> () / IO {
+  let config = load();
+  log_info("oikos-bot starting (mode=" ++ mode_to_string(config.mode) ++ ", port=" ++ int_to_string(config.port) ++ ")");
+  log_info("oikos-bot ready (listener wire-up pending)")
+}

@@ -1,0 +1,84 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Config.affine — environment-variable loading.
+//
+// Ports `oikos/bot-integration/src/Config.res`. Uses the builtin
+// `getenv` (returns Option<String>) for process-env reads.
+// `OIKOS_ALLOW_UNVERIFIED_WEBHOOKS=true` is the dev-only escape hatch
+// (NEVER set in production).
+
+module Config;
+
+use prelude::{Option, Some, None};
+use Types::{Config, BotMode, Consultant, Advisor, Regulator};
+
+// ── env helpers ─────────────────────────────────────────────────────
+
+pub fn get_env_or(key: String, default: String) -> String {
+  match getenv(key) {
+    Some(v) => v,
+    None    => default
+  }
+}
+
+pub fn get_env_opt(key: String) -> Option<String> {
+  getenv(key)
+}
+
+pub fn get_env_int(key: String, default: Int) -> Int {
+  match getenv(key) {
+    Some(v) => match parse_int(v) {
+      Some(n) => n,
+      None    => default
+    },
+    None => default
+  }
+}
+
+pub fn get_env_bool(key: String, default: Bool) -> Bool {
+  match getenv(key) {
+    Some(v) => {
+      let lower = to_lowercase(v);
+      lower == "true" || lower == "1" || lower == "yes"
+    },
+    None => default
+  }
+}
+
+// ── Mode parsing ────────────────────────────────────────────────────
+
+pub fn parse_mode(s: String) -> BotMode {
+  match to_lowercase(s) {
+    "consultant" => Consultant,
+    "regulator"  => Regulator,
+    _            => Advisor
+  }
+}
+
+pub fn mode_to_string(mode: BotMode) -> String {
+  match mode {
+    Consultant => "consultant",
+    Advisor    => "advisor",
+    Regulator  => "regulator"
+  }
+}
+
+// ── Top-level load ──────────────────────────────────────────────────
+//
+// Missing OPTIONAL vars → `None`; missing REQUIRED vars are surfaced
+// at call-sites that actually need them (so `/health` can come up
+// without GH credentials configured).
+
+pub fn load() -> Config {
+  #{
+    port: get_env_int("PORT", 3000),
+    mode: parse_mode(get_env_or("BOT_MODE", "advisor")),
+    analysis_endpoint: get_env_or("ANALYSIS_ENDPOINT", "http://localhost:8080/analyze"),
+    github_webhook_secret: get_env_opt("GITHUB_WEBHOOK_SECRET"),
+    gitlab_webhook_secret: get_env_opt("GITLAB_WEBHOOK_SECRET"),
+    github_app_id: get_env_opt("GITHUB_APP_ID"),
+    github_private_key: get_env_opt("GITHUB_PRIVATE_KEY"),
+    allow_unverified_webhooks: get_env_bool("OIKOS_ALLOW_UNVERIFIED_WEBHOOKS", false)
+  }
+}

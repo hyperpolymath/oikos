@@ -1,0 +1,167 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+//
+// Externs.affine — package-level shim per AffineScript convention Q4.
+//
+// All `extern fn` declarations consumed by this package live in this
+// one file. Other modules `use Externs` and call the canonical AS
+// wrappers (`pub fn ...`) below rather than touching `extern` directly.
+//
+// FFI target: libhpm_github_api.so (Phase 4 composite). The library
+// itself links libhpm_crypto.so, libhpm_http_client.so, libhpm_json.so;
+// callers only need libhpm_github_api on their LD_LIBRARY_PATH.
+//
+// The unified pattern (estate-wide, owner directive 2026-05-28): Zig
+// for all APIs and FFIs, Idris2 for ABIs. The AS extern declarations
+// below name C ABI symbols emitted by the Zig adapter at
+// `hpm-github-api-rsr/ffi/zig/src/main.zig`; the Idris2 ABI contract
+// for those symbols lives at `hpm-github-api-rsr/src/abi/Foreign.idr`.
+
+module Externs;
+
+use prelude::{Option, Some, None, Result, Ok, Err};
+
+// ── Opaque handle types ─────────────────────────────────────────────
+//
+// Heap-allocated wrappers managed by libhpm_github_api. Created by
+// the JWT / token-exchange / REST-op functions; freed via the matching
+// `*_free`. Don't dereference; pass through the accessor functions.
+
+pub extern type GitHubToken;
+pub extern type GitHubResponse;
+
+// ── JWT generation ──────────────────────────────────────────────────
+//
+// Builds a GitHub App JWT signed with the PKCS#8 PEM RSA-2048 private
+// key. `lifetime_seconds` is clamped to GitHub's 600-second ceiling on
+// the C side. Returns None on RS256/base64url/alloc failure.
+
+pub extern fn hpm_github_app_generate_jwt(app_id: String,
+                                           pem: String,
+                                           lifetime_seconds: Int) -> GitHubToken / Async;
+
+// ── Installation-token exchange ─────────────────────────────────────
+//
+// Exchanges an App JWT for an installation access token by calling
+// POST /app/installations/:id/access_tokens. Returns None on HTTP /
+// JSON / non-2xx failure.
+
+pub extern fn hpm_github_app_get_installation_token(jwt: GitHubToken,
+                                                     installation_id: Int) -> GitHubToken / Async;
+
+// ── REST operations ─────────────────────────────────────────────────
+
+pub extern fn hpm_github_post_pr_comment(token: GitHubToken,
+                                          owner: String,
+                                          repo: String,
+                                          issue_number: Int,
+                                          body: String) -> GitHubResponse / Async;
+
+pub extern fn hpm_github_update_comment(token: GitHubToken,
+                                         owner: String,
+                                         repo: String,
+                                         comment_id: Int,
+                                         body: String) -> GitHubResponse / Async;
+
+pub extern fn hpm_github_create_check_run(token: GitHubToken,
+                                           owner: String,
+                                           repo: String,
+                                           name: String,
+                                           head_sha: String,
+                                           status: String,
+                                           conclusion: String) -> GitHubResponse / Async;
+
+pub extern fn hpm_github_get_pull_request(token: GitHubToken,
+                                           owner: String,
+                                           repo: String,
+                                           pr_number: Int) -> GitHubResponse / Async;
+
+pub extern fn hpm_github_get_repository(token: GitHubToken,
+                                         owner: String,
+                                         repo: String) -> GitHubResponse / Async;
+
+// ── Accessors + lifecycle ───────────────────────────────────────────
+
+pub extern fn hpm_github_token_bytes(token: GitHubToken) -> String;
+pub extern fn hpm_github_token_free(token: GitHubToken);
+
+pub extern fn hpm_github_response_status_get(resp: GitHubResponse) -> Int;
+pub extern fn hpm_github_response_body_get(resp: GitHubResponse) -> String;
+pub extern fn hpm_github_response_free(resp: GitHubResponse);
+
+// ── Canonical AS-named wrappers ─────────────────────────────────────
+//
+// Consumers should use the `pub fn` wrappers below, not the raw extern
+// names. The wrappers keep the AS surface uniform with the rest of the
+// codebase (snake_case, idiomatic types) and absorb future C-side ABI
+// changes in one place.
+
+pub fn generate_jwt(app_id: String,
+                    pem: String,
+                    lifetime_seconds: Int) -> GitHubToken / Async {
+  hpm_github_app_generate_jwt(app_id, pem, lifetime_seconds)
+}
+
+pub fn get_installation_token(jwt: GitHubToken,
+                              installation_id: Int) -> GitHubToken / Async {
+  hpm_github_app_get_installation_token(jwt, installation_id)
+}
+
+pub fn post_pr_comment(token: GitHubToken,
+                       owner: String,
+                       repo: String,
+                       issue_number: Int,
+                       body: String) -> GitHubResponse / Async {
+  hpm_github_post_pr_comment(token, owner, repo, issue_number, body)
+}
+
+pub fn update_comment(token: GitHubToken,
+                      owner: String,
+                      repo: String,
+                      comment_id: Int,
+                      body: String) -> GitHubResponse / Async {
+  hpm_github_update_comment(token, owner, repo, comment_id, body)
+}
+
+pub fn create_check_run(token: GitHubToken,
+                        owner: String,
+                        repo: String,
+                        name: String,
+                        head_sha: String,
+                        status: String,
+                        conclusion: String) -> GitHubResponse / Async {
+  hpm_github_create_check_run(token, owner, repo, name, head_sha, status, conclusion)
+}
+
+pub fn get_pull_request(token: GitHubToken,
+                        owner: String,
+                        repo: String,
+                        pr_number: Int) -> GitHubResponse / Async {
+  hpm_github_get_pull_request(token, owner, repo, pr_number)
+}
+
+pub fn get_repository(token: GitHubToken,
+                      owner: String,
+                      repo: String) -> GitHubResponse / Async {
+  hpm_github_get_repository(token, owner, repo)
+}
+
+pub fn token_bytes(token: GitHubToken) -> String {
+  hpm_github_token_bytes(token)
+}
+
+pub fn token_free(token: GitHubToken) {
+  hpm_github_token_free(token)
+}
+
+pub fn response_status(resp: GitHubResponse) -> Int {
+  hpm_github_response_status_get(resp)
+}
+
+pub fn response_body(resp: GitHubResponse) -> String {
+  hpm_github_response_body_get(resp)
+}
+
+pub fn response_free(resp: GitHubResponse) {
+  hpm_github_response_free(resp)
+}
