@@ -9,7 +9,7 @@ v0.1.0-dev
 :source-highlighter: rouge
 
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/oikos"]
-image:https://img.shields.io/badge/License-EUPL-1.2-blue.svg[License: EUPL-1.2,link="https://opensource.org/licenses/EUPL-1.2"]
+image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
 image:https://api.thegreenwebfoundation.org/greencheckimage/github.com[Green Web,link="https://www.thegreenwebfoundation.org/green-web-check/?url=github.com"]
 
 *A typed DSL for stock-flow consistent macroeconomic modelling.*
@@ -193,8 +193,11 @@ See link:spec/SPEC.adoc[spec/SPEC.adoc] for:
 
 == Licence
 
-EUPL-1.2.
-See link:LICENSES/EUPL-1.2.txt[LICENSES/EUPL-1.2.txt].
+MPL-2.0.
+See link:LICENSE[LICENSE].
+
+(Oikos was originally licensed EUPL-1.2; the estate migrated to MPL-2.0
+on 2026-05-22.  See <<DR-010>> in `docs/DESIGN.adoc` for the rationale.)
 
 == References
 

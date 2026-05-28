@@ -97,7 +97,7 @@ Type checking is delegated entirely to the Ephapax type checker
 == DR-002 — EUPL-1.2 licence
 
 *Date:* 2026-04-11 +
-*Status:* accepted
+*Status:* superseded by <<DR-010>>
 
 === Context
 
@@ -120,6 +120,14 @@ Oikos is licensed under EUPL-1.2 (European Union Public Licence).
 * Ephapax (MPL-2.0) is a dependency.
   PMPL compatibility with EUPL is an open question pending legal review.
   _Flag: confirm PMPL ↔ EUPL compatibility before v1.0 release._
+
+[NOTE]
+====
+This decision was superseded by <<DR-010>> (2026-05-22) on the way to
+v1.0, which adopts MPL-2.0 to remove the PMPL ↔ EUPL compatibility
+unknown and align Oikos with the estate default.  The rationale below
+is kept as a historical record.
+====
 
 == DR-003 — Godley invariant checking before desugaring
 
@@ -464,6 +472,51 @@ remaining piece of Oikos.
   type-theoretic machinery, leaving the genuine type-checking to Ephapax.
 * Decision to return to Ephapax work is confirmed: completing `subst` is the
   single most valuable thing to do next for both Ephapax and Oikos.
+
+[#DR-010]
+== DR-010 — MPL-2.0 licence (supersedes DR-002)
+
+*Date:* 2026-05-22 +
+*Status:* accepted
+
+=== Context
+
+DR-002 (2026-04-11) selected EUPL-1.2 as an explicit exception to the
+estate-wide MPL-2.0 default.  Two follow-on findings made the exception
+costly:
+
+* *PMPL ↔ EUPL compatibility never resolved.*  The flag raised in
+  DR-002's Consequences (legal review of PMPL ↔ EUPL compatibility
+  before v1.0) remained open.  Oikos depends on Ephapax, which is
+  PMPL-1.0-or-later with MPL-2.0 fallback — a binary that statically
+  links Ephapax under EUPL-1.2 has an unresolved combinatorial-licence
+  question that we are not equipped to answer without paid legal advice.
+* *Distribution friction across the estate.*  Every adjacent
+  hyperpolymath project the user might want to combine with Oikos
+  (cartridges, analyzers, bot-integration) is MPL-2.0; an EUPL-licensed
+  core forces every cross-project consumer to re-do the compatibility
+  analysis.
+
+=== Decision
+
+Adopt MPL-2.0 across Oikos, superseding DR-002.  The LICENSE file at
+the repository root was migrated on 2026-05-22 (commit `5ea61de`); this
+DR records the rationale and supersedes DR-002's explicit-exception
+status.
+
+=== Consequences
+
+* The PMPL ↔ EUPL compatibility flag is closed — Ephapax (PMPL/MPL-2.0)
+  and Oikos (MPL-2.0) compose without question.
+* EU translations and the EUPL governance hook are lost.  The estate
+  accepts this trade-off: economist users were never going to read the
+  Slovenian translation of the licence in practice, and MPL-2.0 is
+  itself OSI-approved with broad recognition.
+* SPDX headers across the codebase need to flip from `EUPL-1.2` to
+  `MPL-2.0`; this is a mechanical sweep.
+* The historical `LICENSES/EUPL-1.2.txt` file is kept for a transition
+  period as a record of the prior choice and removed in a separate
+  cleanup.
 
 == Open architectural questions
 
