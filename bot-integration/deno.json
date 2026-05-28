@@ -7,12 +7,20 @@
     "./tea": "./src/tea/ServerTea.res.js"
   },
   "publish": {
-    "include": ["src/**/*.js", "src/**/*.res", "bindings/**/*.js", "bindings/**/*.res", "rescript-runtime/**/*.js", "README.md", "LICENSE"]
+    "include": [
+      "src/**/*.js",
+      "src/**/*.res",
+      "bindings/**/*.js",
+      "bindings/**/*.res",
+      "rescript-runtime/**/*.js",
+      "README.md",
+      "LICENSE"
+    ]
   },
   "tasks": {
-    "build:rescript": "rescript build",
-    "watch:rescript": "rescript build -w",
-    "clean": "rescript clean",
+    "build:rescript": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build",
+    "watch:rescript": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 build -w",
+    "clean": "deno run -A --allow-scripts=npm:rescript npm:rescript@^12.0.0 clean",
     "start": "deno run --allow-net --allow-env --allow-read src/Oikos.res.js",
     "start:legacy": "deno run --allow-net --allow-env --allow-read src/Main.res.js",
     "dev": "deno run --watch --allow-net --allow-env --allow-read src/Oikos.res.js",
@@ -29,6 +37,7 @@
     "rescript/lib/es6/": "./rescript-runtime/",
     "@rescript/runtime/": "./node_modules/@rescript/runtime/"
   },
+  "nodeModulesDir": "auto",
   "compilerOptions": {
     "strict": true,
     "allowJs": true
@@ -36,12 +45,30 @@
   "lint": {
     "rules": {
       "tags": ["recommended"]
-    }
+    },
+    "exclude": [
+      "rescript-runtime/",
+      "src/**/*.res.js",
+      "src/**/*.bs.js",
+      "bindings/**/*.res.js",
+      "node_modules/",
+      "lib/",
+      "deps/"
+    ]
   },
   "fmt": {
     "useTabs": false,
     "lineWidth": 100,
     "indentWidth": 2,
-    "singleQuote": false
+    "singleQuote": false,
+    "exclude": [
+      "rescript-runtime/",
+      "src/**/*.res.js",
+      "src/**/*.bs.js",
+      "bindings/**/*.res.js",
+      "node_modules/",
+      "lib/",
+      "deps/"
+    ]
   }
 }

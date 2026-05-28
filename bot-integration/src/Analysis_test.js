@@ -6,7 +6,7 @@
 // schema drift; these tests pin the schema contract.
 
 import { decodeAnalysisResult } from "./Analysis.res.js";
-import { assertEquals, assert } from "jsr:@std/assert@^1.0.0";
+import { assert, assertEquals } from "jsr:@std/assert@^1.0.0";
 
 const validPayload = {
   eco: { carbonScore: 80.0, energyScore: 70.0, resourceScore: 75.0, score: 75.0 },

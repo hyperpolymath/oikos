@@ -3,97 +3,91 @@
 
 function make() {
   return {
-          routes: [],
-          middlewares: [],
-          notFoundHandler: undefined
-        };
+    routes: [],
+    middlewares: [],
+    notFoundHandler: undefined
+  };
 }
 
 function methodToString(method) {
   switch (method) {
     case "GET" :
-        return "GET";
+      return "GET";
     case "POST" :
-        return "POST";
+      return "POST";
     case "PUT" :
-        return "PUT";
+      return "PUT";
     case "DELETE" :
-        return "DELETE";
+      return "DELETE";
     case "PATCH" :
-        return "PATCH";
+      return "PATCH";
     case "OPTIONS" :
-        return "OPTIONS";
+      return "OPTIONS";
     case "HEAD" :
-        return "HEAD";
-    
+      return "HEAD";
   }
 }
 
 function methodFromString(str) {
   switch (str) {
     case "DELETE" :
-        return "DELETE";
+      return "DELETE";
     case "GET" :
-        return "GET";
+      return "GET";
     case "HEAD" :
-        return "HEAD";
+      return "HEAD";
     case "OPTIONS" :
-        return "OPTIONS";
+      return "OPTIONS";
     case "PATCH" :
-        return "PATCH";
+      return "PATCH";
     case "POST" :
-        return "POST";
+      return "POST";
     case "PUT" :
-        return "PUT";
+      return "PUT";
     default:
-      return ;
+      return;
   }
 }
 
 function matchPath(pattern, path) {
-  var patternParts = pattern.split("/").filter(function (p) {
-        return p !== "";
-      });
-  var pathParts = path.split("/").filter(function (p) {
-        return p !== "";
-      });
+  let patternParts = pattern.split("/").filter(p => p !== "");
+  let pathParts = path.split("/").filter(p => p !== "");
   if (patternParts.length !== pathParts.length) {
-    return ;
+    return;
   }
-  var params = {};
-  var matches = {
+  let params = {};
+  let matches = {
     contents: true
   };
-  patternParts.forEach(function (patternPart, i) {
-        var pathPart = pathParts[i];
-        if (!patternPart.startsWith(":")) {
-          if (patternPart !== pathPart) {
-            matches.contents = false;
-            return ;
-          } else {
-            return ;
-          }
-        }
-        var paramName = patternPart.slice(1);
-        params[paramName] = pathPart;
-      });
+  patternParts.forEach((patternPart, i) => {
+    let pathPart = pathParts[i];
+    if (!patternPart.startsWith(":")) {
+      if (patternPart !== pathPart) {
+        matches.contents = false;
+        return;
+      } else {
+        return;
+      }
+    }
+    let paramName = patternPart.slice(1);
+    params[paramName] = pathPart;
+  });
   if (matches.contents) {
     return params;
   }
-  
 }
 
 function addRoute(router, method, path, handler) {
-  var newRoute = {
+  let newRoute = {
     method: method,
     path: path,
     handler: handler
   };
   return {
-          routes: router.routes.concat([newRoute]),
-          middlewares: router.middlewares,
-          notFoundHandler: router.notFoundHandler
-        };
+    routes: router.routes.concat([newRoute]),
+    middlewares: router.middlewares,
+    notFoundHandler: router.notFoundHandler
+  };
 }
 
 function get(router, path, handler) {
@@ -122,93 +116,84 @@ function options(router, path, handler) {
 
 function use(router, middleware) {
   return {
-          routes: router.routes,
-          middlewares: router.middlewares.concat([middleware]),
-          notFoundHandler: router.notFoundHandler
-        };
+    routes: router.routes,
+    middlewares: router.middlewares.concat([middleware]),
+    notFoundHandler: router.notFoundHandler
+  };
 }
 
 function notFound(router, handler) {
   return {
-          routes: router.routes,
-          middlewares: router.middlewares,
-          notFoundHandler: handler
-        };
+    routes: router.routes,
+    middlewares: router.middlewares,
+    notFoundHandler: handler
+  };
 }
 
-var Url = {};
+let Url = {};
 
 async function handle(router, req) {
-  var methodStr = req.method;
-  var url = req.url;
-  var urlObj = new URL(url);
-  var path = urlObj.pathname;
-  var methodEnum = methodFromString(methodStr);
+  let methodStr = req.method;
+  let url = req.url;
+  let urlObj = new URL(url);
+  let path = urlObj.pathname;
+  let methodEnum = methodFromString(methodStr);
   if (methodEnum === undefined) {
     return new (globalThis.Response)("Method not allowed", {
-                status: 405
-              });
+      status: 405
+    });
   }
-  var matchingRoute = {
+  let matchingRoute = {
     contents: undefined
   };
-  router.routes.forEach(function (route) {
-        if (route.method !== methodEnum) {
-          return ;
-        }
-        var _params = matchPath(route.path, path);
-        if (_params !== undefined) {
-          matchingRoute.contents = route;
-          return ;
-        }
-        
-      });
-  var route = matchingRoute.contents;
+  router.routes.forEach(route => {
+    if (route.method !== methodEnum) {
+      return;
+    }
+    let _params = matchPath(route.path, path);
+    if (_params !== undefined) {
+      matchingRoute.contents = route;
+      return;
+    }
+  });
+  let route = matchingRoute.contents;
   if (route !== undefined) {
-    var finalHandler = function () {
-      return route.handler(req);
-    };
-    var wrappedHandler = router.middlewares.reduceRight((function (next, middleware) {
-            return function () {
-              return middleware(req, next);
-            };
-          }), finalHandler);
+    let finalHandler = () => route.handler(req);
+    let wrappedHandler = router.middlewares.reduceRight((next, middleware) => (() => middleware(req, next)), finalHandler);
     return await wrappedHandler();
   }
-  var handler = router.notFoundHandler;
+  let handler = router.notFoundHandler;
   if (handler !== undefined) {
     return await handler(req);
   } else {
     return new (globalThis.Response)("Not Found", {
-                status: 404
-              });
+      status: 404
+    });
   }
 }
 
 function serve(router, port) {
   return Deno.serve({
-              port: port
-            }, (async function (req) {
-                return await handle(router, req);
-              }));
+    port: port
+  }, async req => await handle(router, req));
 }
 
 export {
-  make ,
-  methodToString ,
-  methodFromString ,
-  matchPath ,
-  addRoute ,
-  get ,
-  post ,
-  put ,
-  $$delete ,
-  patch ,
-  options ,
-  use ,
-  notFound ,
-  Url ,
-  handle ,
-  serve ,
+  make,
+  methodToString,
+  methodFromString,
+  matchPath,
+  addRoute,
+  get,
+  post,
+  put,
+  $$delete,
+  patch,
+  options,
+  use,
+  notFound,
+  Url,
+  handle,
+  serve,
 }
 /* No side effect */

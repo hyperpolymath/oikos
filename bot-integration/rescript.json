@@ -1,15 +1,15 @@
 {
   "name": "oikos-bot",
   "sources": [
-    {"dir": "src", "subdirs": true},
-    {"dir": "bindings", "subdirs": true}
+    { "dir": "src", "subdirs": true },
+    { "dir": "bindings", "subdirs": true }
   ],
   "package-specs": [{
     "module": "esmodule",
     "in-source": true
   }],
   "suffix": ".res.js",
-  "bs-dependencies": [],
+  "dependencies": [],
   "warnings": {
     "error": "+101"
   },

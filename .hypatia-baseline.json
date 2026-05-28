@@ -1,0 +1,16 @@
+[
+  {
+    "severity": "high",
+    "rule_module": "cicd_rules",
+    "type": "banned_language_file",
+    "file_pattern": "bot-integration/**/*.res",
+    "note": "Legacy ReScript OikosBot codebase. The AffineScript port lives at bot-integration-affine/ (PR #35, branch port/bot-affinescript-phase1-leaves) and will reach feature parity in subsequent PRs gated on AffineScript stdlib Json v0.3 + http-capability-gateway externs. Once the AS port is at parity, bot-integration/ is deleted and this exemption is removed."
+  },
+  {
+    "severity": "high",
+    "rule_module": "cicd_rules",
+    "type": "banned_language_file",
+    "file": "bot-integration/rescript.json",
+    "note": "Companion config for the legacy ReScript codebase exempted above. Removed at the same time as bot-integration/."
+  }
+]
