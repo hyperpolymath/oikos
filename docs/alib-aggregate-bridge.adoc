@@ -68,6 +68,24 @@ machine-checked equal to AffineScript subtyping in
 `nextgen-typing/.../EchoTyping.agda`). One type language serves
 micro→macro aggregation, cross-language ABI, *and* uncertainty.
 
+[NOTE]
+====
+*Naming + provenance — the `MacroAggregation` instance.* The construction in
+this section is the `EchoAggregation` of echo-types
+(`proofs/agda/EchoAggregation.agda`) read at the *macroeconomic* scale.
+Aggregation-as-Echo is a *fundamental* of echo-types: there, `EchoAggregation`
+is the *general* monoid/group aggregation form — a `Monoid` carrier, a
+`GroupAggregator`, the `aggregation-as-fold` homomorphism law, and the
+concrete `sumMonoid` / `countMonoid` / `maxMonoid` / `minMonoid` instances
+(echo-types#175). Naming the macro rollup `EchoAggregation` *here* would therefore
+be odd, so the alib calls it **`MacroAggregation`**: the specific instance
+whose carrier is `MacroState`, whose fold is the column-sum `aggregate` (§4),
+and whose mechanised anchor is echo-types' worked `Example-PairSum`
+(`pairSum : ℕ × ℕ → ℕ`, which *is* the `sumMonoid` fold — so the macro result
+is a *special case* of the general theorem, not a separate idea). The
+mechanised content lives in echo-types; oikos cites it (§8).
+====
+
 == 3. The shared `MacroState` schema (the interchange type)
 
 A single versioned record, the lingua franca between layers. Seshat-shaped
@@ -108,10 +126,13 @@ loss is typed and the residue named:
 | `surplus`       | `wages − subsistence_minimum · population`
 |===
 
-Each morphism is a fibre projection; `Echo aggregate m` is its fibre. The
-Godley invariant from Bridge 1 is what guarantees these sums *reconcile*
-(no money created or destroyed in the rollup) — that is the load-bearing
-contribution of oikos to the macro layer.
+Each morphism is a fibre projection; `Echo aggregate m` is its fibre. In the
+general vocabulary (§2 note), each `Σ`-field is a `GroupAggregator` into
+`sumMonoid` and each `count`-field one into `countMonoid` — so `MacroAggregation`
+is literally the record of these per-field folds, every one an instance of
+echo-types' `aggregation-as-fold`. The Godley invariant from Bridge 1 is what
+guarantees these sums *reconcile* (no money created or destroyed in the rollup)
+— that is the load-bearing contribution of oikos to the macro layer.
 
 == 5. The betlang stochastic seam
 
@@ -169,13 +190,17 @@ everything downstream.
 
 * This note and the §3 schema / §4 morphism *signatures* are design artifacts
   — no checker required.
-* Promoting §2 ("aggregation = Echo", "non-disaggregability = no-section")
-  into a *mechanised* result is proof work. It must live where its checker is
-  installed and green. The natural home is *echo-types* (Agda 2.6.3 +
-  stdlib 2.3 + absolute-zero — provisioned), as a small module
-  `EchoAggregation.agda` (`aggregate` as a concrete finite map; its fibre is
-  an `Echo`; `no-section` instantiated). Every edit ends with
-  `agda All.agda` exiting 0; if the checker is not live, *nothing is written*.
+* §2 ("aggregation = Echo", "non-disaggregability = no-section") is now a
+  *mechanised* result in *echo-types* — `proofs/agda/EchoAggregation.agda`
+  (`--safe --without-K`, zero postulates, pinned in `Smoke.agda`). It landed
+  as the *general* monoid/group aggregation form (a `Monoid` carrier, a
+  `GroupAggregator`, the proved `aggregation-as-fold` homomorphism law, the
+  `sumMonoid` / `countMonoid` / `maxMonoid` / `minMonoid` instances, and
+  generic `no-canonical-disaggregation-of`); the macro reading of *this* note
+  is its `Example-PairSum` instance — `MacroAggregation`, §2. echo-types is
+  the home because that is where the Agda checker is installed and green;
+  oikos (Rust) *consumes* the principle at citation level — there is no
+  Agda↔Rust import path. Proof edits there end with `agda All.agda` exiting 0.
 * The betlang Lean 4 layer and ephapax/absolute-zero Coq layers are *not*
   assumed installed; no proof is authored there until their toolchains are
   confirmed.
@@ -198,8 +223,10 @@ everything downstream.
   affine echo-residue), `docs/echo-residue-mapping.adoc`
 * betlang — `docs/echo-types.adoc`, `lib/dutch-book.rkt`, `ROADMAP.adoc`
   ("FFI preparation for aggregate-library"), `docs/hyperpolymath-julia-integration.md`
-* echo-types — `proofs/agda/EchoResidue.agda` (`no-section-collapse-to-residue`),
-  `proofs/agda/EchoLinear.agda` (`weaken`)
+* echo-types — `proofs/agda/EchoAggregation.agda` (the general monoid/group
+  aggregation form, echo-types#175, + the `Example-PairSum` macro instance this
+  note's `MacroAggregation` cites), `proofs/agda/EchoResidue.agda`
+  (`no-section-collapse-to-residue`), `proofs/agda/EchoLinear.agda` (`weaken`)
 * nextgen-typing — `README.adoc` (typed-wasm as "aggregate library"),
   `verification/proofs/agda/EchoTyping.agda`
 * Cliodynamics.jl — `load_seshat_csv`, `demographic_structural_model`,
