@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = Oikos
 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
@@ -9,7 +10,7 @@ v0.1.0-dev
 :source-highlighter: rouge
 
 image:https://img.shields.io/badge/OpenSSF-Best_Practices-green?logo=opensourcesecurity[OpenSSF Best Practices,link="https://www.bestpractices.dev/en/projects/new?repo_url=https://github.com/hyperpolymath/oikos"]
-image:https://img.shields.io/badge/License-MPL--2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
+image:https://img.shields.io/badge/License-MPL_2.0-blue.svg[License: MPL-2.0,link="https://opensource.org/licenses/MPL-2.0"]
 image:https://api.thegreenwebfoundation.org/greencheckimage/github.com[Green Web,link="https://www.thegreenwebfoundation.org/green-web-check/?url=github.com"]
 
 *A typed DSL for stock-flow consistent macroeconomic modelling.*

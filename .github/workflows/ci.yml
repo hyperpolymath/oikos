@@ -4,32 +4,27 @@
 # Oikos Bot - Continuous Integration
 
 name: CI
-
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
-
 permissions: read-all
-
 jobs:
   haskell:
     name: Haskell Analyzer
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Setup Haskell
         uses: haskell-actions/setup@cd0d9bdd65b20557f41bea4dbe43d0b5fbbfe553 # v2.6.3
         with:
           ghc-version: "9.4"
           cabal-version: "3.10"
-
       - name: Cache Cabal
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
@@ -38,25 +33,22 @@ jobs:
             ~/.cabal/store
             analyzers/code-haskell/dist-newstyle
           key: cabal-${{ runner.os }}-ghc9.4-${{ hashFiles('analyzers/code-haskell/eco-analyzer.cabal') }}
-
       - name: Build Haskell analyzer
         working-directory: analyzers/code-haskell
         run: |
           cabal update
           cabal build all
         continue-on-error: true
-
   security:
     name: Security Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: read
       security-events: write
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
       - name: Run Trivy vulnerability scanner
         uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
@@ -66,9 +58,8 @@ jobs:
           format: "sarif"
           output: "trivy-results.sarif"
         continue-on-error: true
-
       - name: Upload Trivy scan results
-        uses: github/codeql-action/upload-sarif@7211b7c8077ea37d8641b6271f6a365a22a5fbfa # v3.28.1
+        uses: github/codeql-action/upload-sarif@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v3.28.1
         with:
           sarif_file: "trivy-results.sarif"
         continue-on-error: true
