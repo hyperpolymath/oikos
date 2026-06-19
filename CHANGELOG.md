@@ -4,7 +4,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 -->
 # Changelog
 
-All notable changes to `oikos` will be documented in this file.
+All notable changes to `oikos-economics-accounting-dsl` will be documented in this file.
 
 This file is generated from conventional commits by the
 [`changelog-reusable.yml`](https://github.com/hyperpolymath/standards/blob/main/.github/workflows/changelog-reusable.yml)
@@ -16,12 +16,6 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/);
 this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
-
-### Added
-
-- feat(bot): `bot-integration-affine/` Phase 5 AffineScript scaffold (#35) — initial AS port of OikosBot; cross-module type-check, JSON payload extraction, and HTTP-server accept loop are gated on upstream `affinescript` stdlib work (Json v0.3 RSR rewire `affinescript#421` + Http server FFI `affinescript#425`).
-- feat: Oikos Bot v0.1.0-beta - TEA architecture with typed HTTP routing
-- feat: add GitHub App manifest for developer programme registration
 
 ### Fixed
 
@@ -39,18 +33,14 @@ this project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- chore(bot-integration): clean shutoff of the legacy ReScript `bot-integration/` (#41) — 208 files / -33,061 lines: removes `bot-integration/`, `containers/`, `.github/workflows/oikos.yml`, the `rescript:` job from `ci.yml`, the npm/bot-integration dependabot entry, and `.gitmodules`. README / ARCHITECTURE / ROADMAP / DEPLOY / disambiguation docs repointed at `bot-integration-affine/`. No production blast radius (`.github/app.yml` URLs were `*.example.com` placeholders).
+- chore(repo): split OikosBot into `hyperpolymath/oikosbot` and rename this repository for the economics accounting DSL.
 - chore(license): align stale SPDX headers + `Cargo.toml` manifest with `MPL-2.0` (#36) — completes the 2026-05-22 EUPL → MPL migration that had left 45 file headers + the manifest at `EUPL-1.2`.
 - chore(license): remove historical `LICENSES/EUPL-1.2.txt` (#40) — final cleanup of the EUPL transition artefact, deferred from #38 as a transition-period record.
-- refactor: convert TypeScript to JavaScript (language policy compliance)
-- refactor: complete eco-bot → oikos rename across all files
-- refactor: rename eco-bot to oikos, replace nerdctl with Svalinn/Vörðr
 
 ### Documentation
 
 - docs(license): DR-010 supersedes DR-002 — `MPL-2.0` adoption + README badge / paragraph flip (#38) — closes the 2026-05-22 LICENSE migration that lacked a Decision Record. Documents PMPL ↔ EUPL distribution-compatibility incoherence as the migration rationale.
 - docs(readme): add SPDX header and/or standard badges
-- docs: add manifest flow instructions to DEPLOY.md
 - docs(security): add SECURITY.md
 
 ### CI
