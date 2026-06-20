@@ -1,3 +1,7 @@
+<!--
+SPDX-License-Identifier: MPL-2.0
+Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+-->
 ## Machine-Readable Artefacts
 
 The following files in `.machine_readable/6a2/` contain structured project metadata (a2ml format; the prior `.scm` Guile-Scheme files were retired estate-wide):
@@ -47,7 +51,7 @@ The following files in `.machine_readable/6a2/` contain structured project metad
 | Bun | Deno |
 | pnpm/yarn | Deno |
 | Go | Rust |
-| Python | Julia/Rust/ReScript |
+| Python | Julia/Rust/AffineScript |
 | Java/Kotlin | Rust/Tauri/Dioxus |
 | Swift | Tauri/Dioxus |
 | React Native | Tauri/Dioxus |
@@ -66,7 +70,7 @@ Both are FOSS with independent governance (no Big Tech).
 
 1. **No new TypeScript files** - Write new code in AffineScript
 2. **No new ReScript files** - Legacy `bot-integration/` ReScript was retired 2026-05-28 (oikos#41); the AS port lives at `bot-integration-affine/`
-3. **No package.json for runtime deps** - Use deno.json imports
+3. **No package.json - use deno.json deps** - Use deno.json imports
 4. **No node_modules in production** - Deno caches deps automatically
 5. **No Go code** - Use Rust instead
 6. **No Python anywhere** - Use Julia for data/batch, Rust for systems

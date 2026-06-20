@@ -1,32 +1,12 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-= Oikos — repository roadmap index
+= Oikos Economics Accounting DSL — roadmap
 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
-v2, 2026-05-27
+v2, 2026-06-19
 :icons: font
 
-This repository contains *two separate products*. They each have their own
-roadmap.
+This repository contains only the Oikos stock-flow consistent economics DSL.
 
-[cols="1,3", options="header"]
-|===
-| Product | Roadmap
-
-| *Oikos* (the DSL)
-| link:docs/ROADMAP.adoc[`docs/ROADMAP.adoc`] — typed compiler for stock-flow
-  consistent macroeconomic models.
-  Currently `v0.1.0-dev` scaffold; v0.3 milestone is blocked on the Ephapax
-  parser milestone.
-
-| *OikosBot* (the GitHub App)
-| AffineScript port at `bot-integration-affine/` — code-analysis bot at
-  https://github.com/apps/oikosbot[`apps/oikosbot`]. Phase 5 scaffold
-  landed in PR #35 (2026-05-28); the previous ReScript implementation
-  at `bot-integration/` was retired the same day. Cross-module
-  type-check, JSON payload extraction, and HTTP-server accept loop are
-  gated on upstream AffineScript stdlib work (`Json` v0.3 RSR rewire +
-  `http-capability-gateway` extern surfacing).
-|===
-
-See link:docs/disambiguation/oikos-dsl-vs-oikosbot.adoc[`docs/disambiguation/oikos-dsl-vs-oikosbot.adoc`]
-for why these are different products despite the shared name.
+The active roadmap is link:docs/ROADMAP.adoc[`docs/ROADMAP.adoc`]. OikosBot
+now lives in https://github.com/hyperpolymath/oikosbot[`hyperpolymath/oikosbot`].

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: MPL-2.0
+// Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 // SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 = Oikos — Architectural Decision Record
 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
@@ -206,8 +207,8 @@ audience or tooling benefit.
 
 Oikos follows the estate standard: *GitHub-primary*.
 
-* Canonical remote: `https://github.com/hyperpolymath/oikos`
-* GitLab (`https://gitlab.com/hyperpolymath/oikos`) is a downstream mirror,
+* Canonical remote: `https://github.com/hyperpolymath/oikos-economics-accounting-dsl`
+* GitLab (`https://gitlab.com/hyperpolymath/oikos-economics-accounting-dsl`) is a downstream mirror,
   populated by the estate hub-and-spoke mirror system.
 * CI/CD will use GitHub Actions (`.github/workflows/`) rather than
   `.gitlab-ci.yml`; the existing `.gitlab-ci.yml` scaffold can be removed
@@ -504,11 +505,10 @@ costly:
   PMPL-1.0-or-later with MPL-2.0 fallback — a binary that statically
   links Ephapax under EUPL-1.2 has an unresolved combinatorial-licence
   question that we are not equipped to answer without paid legal advice.
-* *Distribution friction across the estate.*  Every adjacent
-  hyperpolymath project the user might want to combine with Oikos
-  (cartridges, analyzers, bot-integration) is MPL-2.0; an EUPL-licensed
-  core forces every cross-project consumer to re-do the compatibility
-  analysis.
+* *Distribution friction across the estate.*  Adjacent hyperpolymath
+  projects that users might want to combine with Oikos are MPL-2.0; an
+  EUPL-licensed core forces every cross-project consumer to re-do the
+  compatibility analysis.
 
 === Decision
 
