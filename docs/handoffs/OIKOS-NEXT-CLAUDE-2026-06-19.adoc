@@ -1,0 +1,133 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= OIKOS — next-Claude handoff prompt (2026-06-19)
+:toc: macro
+:toclevels: 2
+
+_A ready-to-paste prompt that orients a fresh Claude session on the Oikos DSL.
+Copy the block under <<the-prompt>> verbatim into a new session. Everything
+outside that block is framing for a human reader; the block itself is
+self-contained._
+
+[NOTE]
+====
+This is a *handoff*, not an affirmation or a roadmap. The dated, signed receipt
+of what was true and checked is `AFFIRMATION.adoc` (repo root); the
+musts/intends/wishes detail is `docs/status/STATUS-2026-06-19.adoc`; the steering
+vision is `README.adoc`. This file just gets the next session productive fast.
+====
+
+toc::[]
+
+[#the-prompt]
+== The prompt (paste this verbatim)
+
+[source,markdown]
+----
+You are picking up work on **Oikos**, a typed DSL whose compiler rejects any
+stock-flow-consistent (SFC) macroeconomic model that violates an accounting
+identity: **"a model that violates an accounting identity does not compile."**
+This is the repo `hyperpolymath/oikos`. Read `AFFIRMATION.adoc`,
+`docs/status/STATUS-2026-06-19.adoc`, and `README.adoc` first, then continue.
+
+WHAT OIKOS IS
+- Two products live here. (1) The **Oikos DSL** at the repo root is **Rust**, a
+  four-crate workspace: `oikos-syntax` (typed AST: Stock/Flow/Sector/
+  GodleyMatrix/Instrument, phantom currency types), `oikos-parser`
+  (Logos + Chumsky surface parser), `oikos-check` (the accounting checks), and
+  `oikos-desugar` (lowering to an Ephapax IR — a stub, see BLOCKED). (2)
+  **OikosBot** under `bot-integration-affine/` is a **separate** AffineScript
+  code-analysis GitHub App; it is NOT the DSL and its status is tracked
+  separately. Do not conflate the two.
+
+GROUND TRUTH AS OF 2026-06-19 (verify, don't trust this paragraph)
+- `cargo build --workspace` is green; `cargo test --workspace` is **71 passed /
+  0 failed**: oikos-syntax 9 · oikos-parser 33 · oikos-check 29 (godley 10 ·
+  instrument 11 · currency 4 · cross_ref 4) · oikos-desugar 0.
+- The normative MUST is **real and tested at the check layer**: in
+  `oikos-check/tests/godley.rs`, balanced Godley matrices give
+  `check_model(&m).is_ok()`, imbalanced give
+  `Err(CheckError::GodleyImbalance{ sector, net, .. })`. Re-run before relying:
+    cargo build --workspace
+    cargo test  --workspace
+    cargo test -p oikos-check --test godley
+  (A `Justfile` also offers `just build` / `just check` / `just test` / `just all`.)
+
+WHAT IS DONE vs BLOCKED
+- DONE + tested: the typed AST; the surface parser (33 tests); and the four
+  accounting checks in `oikos-check` — Godley column-sum balance, instrument
+  coverage, currency soundness (GBP+USD and Stock+Flow are type errors via
+  phantom types), and cross-reference / name resolution.
+- HONEST NUANCE: the MUST is tested on **hand-constructed `Model` values**, not
+  yet end-to-end from surface source, because the parser → check → desugar
+  pipeline is not wired as one path while desugar is blocked. `README.adoc`
+  says "scaffold only" (understates the parser+check crates) and
+  `EXPLAINME.adoc` calls `oikos-check` "blocked/stub" (wrong — the pre-desugar
+  checks pass 29 tests; the genuinely blocked piece is desugar). If you touch
+  those docs, correct that drift; the live run wins.
+- BLOCKED: `oikos-desugar` (0 tests, stub) lowering to Ephapax's linear-typed /
+  region / typestate IR, gated on the upstream `hyperpolymath/ephapax` parser
+  milestone. The `ephapax-ir` / `ephapax-typing` workspace deps are commented
+  out in `Cargo.toml` for exactly this reason. Do not pretend this is done.
+
+NEAR-TERM WORK (pick with the owner)
+- `alib` aggregate library: bridges accounting/bookkeeping to the macro
+  disciplines over a `MacroState`. The design note `docs/alib-aggregate-bridge.adoc`
+  poses **Route A (thin re-export) vs Route B (an aggregation-morphism library),
+  Route B recommended** — but the A-vs-B choice is **owner-gated; do not start
+  building until the owner decides.** alib lives in Rust here and *consumes* the
+  economics principle at the citation level only.
+- EchoAggregation citation: the principle that micro→macro aggregation has **no
+  canonical disaggregation** (no left inverse / section — the Sonnenschein–
+  Mantel–Debreu / representative-agent critique) is *proved in `echo-types`* as
+  the general monoid/group `EchoAggregation` (issue #175), with the macro
+  reading as its `Example-PairSum` instance. It is **cited, not imported** —
+  there is zero Agda toolchain in this repo and no Agda↔Rust import path. Do not
+  restate the result as a failed surjection; `aggregate` is onto, the content is
+  that no disaggregating *section* exists.
+- betlang stochastic seam: probabilistic wagers over `MacroState` (the ternary
+  `bet` DSL, Racket, in `hyperpolymath/betlang`) — design stage.
+
+HOUSE RULES (non-negotiable)
+- Branch: do all work on `claude/ecstatic-wright-OBEvx` (create locally if
+  absent); open **draft** PRs; never push to another branch without explicit
+  permission. Use the GitHub MCP tools for PRs (no `gh` CLI).
+- Languages: DSL = Rust; OikosBot = AffineScript; analyser backend = Haskell. No
+  new TypeScript/ReScript/JavaScript, no Go, no Python (Julia/Rust instead). See
+  `.claude/CLAUDE.md`.
+- Licences: code = MPL-2.0; **prose/docs in this repo = MPL-2.0** (this is NOT
+  echo-types — do not use CC-BY-SA here). MPL-1.0 is banned; rewrite to MPL-2.0.
+  SPDX header on every file.
+- Commits GPG/SSH-signed (`git commit -S`) with the session's standard
+  `Co-Authored-By` + `Claude-Session` footers; PR bodies carry the standard
+  Claude Code footer.
+- Attribution string: write **"Claude Opus 4.8"** in any attestation; never put
+  the bare model-id slug in a committed artefact, commit message, or PR body.
+
+DO NOT REOPEN (settled)
+- The general/macro split: the macro economics IS the `Example-PairSum` instance
+  of the general `EchoAggregation` in echo-types; nothing is re-proved here.
+- The no-section refutation target (a *left* inverse — exactly what
+  non-disaggregability denies).
+- The citation-level scope of the oikos↔echo-types bridge (no import path).
+- "desugar is blocked": it is, on upstream Ephapax. Not addressable from here.
+
+FIRST MOVE
+- Run the three `cargo` commands above; confirm 71/0. Then ask the owner whether
+  to (a) take the alib Route A-vs-B decision and start Route B, (b) advance the
+  parser→check wiring within the desugar block, or (c) something else. Land the
+  smallest useful, fully-tested slice; open a draft PR; keep the AFFIRMATION /
+  STATUS receipts honest.
+----
+
+== Pointers (for the human handing this over)
+
+* `AFFIRMATION.adoc` — the dated, signed receipt for the green
+  `cargo build` / `cargo test` at commit `907e10e`.
+* `docs/status/STATUS-2026-06-19.adoc` — the musts/intends/wishes detail.
+* `docs/alib-aggregate-bridge.adoc` — the alib Route A vs B design note (owner-gated).
+* `README.adoc` / `EXPLAINME.adoc` / `.machine_readable/6a2/STATE.a2ml` — the repo's
+  own claims; note the "scaffold only" / "oikos-check stub" drift the AFFIRMATION flags.
+* Cross-repo: `echo-types` (the proof companion) hosts the general `EchoAggregation`
+  (#175); its own `AFFIRMATION.adoc` + `docs/status/STATUS-2026-06-19.adoc` are the
+  matching receipts from the verified-Agda side.
