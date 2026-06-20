@@ -1,0 +1,165 @@
+// SPDX-License-Identifier: MPL-2.0
+// SPDX-FileCopyrightText: 2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+= STATUS — musts / intends / wishes, as of 2026-06-19
+:toc: macro
+:toclevels: 2
+
+_A dated status snapshot grouped into the three commitment tiers, with the
+normative MUST being **this** repo: the Oikos accounting DSL and its compiler
+guarantee, "a model that violates an accounting identity does not compile".
+This file is the detail behind the chat status table; an identical-in-substance
+copy (from the proof-companion's vantage) lives in `echo-types/docs/status/`._
+
+[NOTE]
+====
+*Three tiers.* *MUST* = the normative core Oikos must deliver — the compiler
+guarantee. *INTENDS* = funded, designed, in-flight work we mean to land.
+*WISHES* = desirable, unscheduled, or externally-gated.
+
+Status labels are honest: *(Landed)* = real + checked this session via `cargo
+test`; *(Partial)* = real but scoped/incomplete; *(Open)* / *(Blocked)* = not
+done, blocker named. Where a doc and a live run disagree, **the live run wins**
+and the contradiction is flagged.
+====
+
+toc::[]
+
+== Headline (one breath)
+
+The Oikos DSL workspace (four Rust crates) **builds green and passes 71 tests,
+0 failures** this session. The normative MUST — reject a model that violates an
+accounting identity — is *real and tested at the check layer*: `check_model`
+returns `Err(GodleyImbalance{…})` on unbalanced Godley matrices and `Ok` on
+balanced ones. The blocked frontier is the **desugar-to-Ephapax** lowering
+(`oikos-desugar`, 0 tests, stub), gated on the upstream Ephapax parser. So:
+"a violating model does not compile" holds *at the check layer on the AST*; the
+full surface-source → desugared-IR → verdict pipeline is not yet wired end to end.
+
+== MUST — the normative core (the Oikos compiler guarantee)
+
+[cols="3,3,1,4",options="header"]
+|===
+| Item | What it guarantees | Status | Evidence (live, `cargo test --workspace`)
+
+| Godley column-sum balance
+| A model whose Godley matrix columns do not net to zero is *rejected*
+| (Landed)
+| `oikos-check/src/godley_check.rs` + `tests/godley.rs` — balanced ⇒ `Ok`, imbalanced ⇒ `Err(GodleyImbalance{sector,net})`; **10 tests green**
+
+| Instrument coverage
+| Every instrument is accounted across sectors
+| (Landed)
+| `instrument_check.rs` + `tests/instrument.rs` — **11 tests green**
+
+| Currency soundness
+| `GBP + USD` (and Stock+Flow) are type errors
+| (Landed)
+| `currency_check.rs` + `tests/currency.rs` — **4 tests green**; phantom types in `oikos-syntax`
+
+| Cross-reference / name resolution
+| Dangling references do not resolve
+| (Landed)
+| `cross_ref.rs` + `resolve.rs` + `tests/cross_ref.rs` — **4 tests green**
+
+| Surface parser (Logos + Chumsky)
+| Source text parses to the typed AST
+| (Partial — further than "in progress")
+| `oikos-parser` — **33 tests green** (`tests/parser.rs`)
+
+| Typed AST
+| `Stock`/`Flow`/`Sector`/`GodleyMatrix`/`Instrument`
+| (Landed)
+| `oikos-syntax` — **9 tests green** (span/AST)
+
+| Desugar → Ephapax IR
+| Lower to Ephapax's linear-typed / region / typestate IR
+| (Blocked)
+| `oikos-desugar` — **0 tests, stub**; blocked on the upstream Ephapax parser milestone
+
+| Verified economics principle the MUST rests on
+| Micro→macro aggregation is non-disaggregable (no canonical section)
+| (Landed, in `echo-types`)
+| `echo-types` general `EchoAggregation` (#175), Agda `--safe --without-K` green; cited here, not imported
+
+| End-to-end source → verdict pipeline
+| parse → check → desugar wired as one path
+| (Partial)
+| parse + check green *separately*; full wiring gated on the desugar block
+|===
+
+== INTENDS — designed / in-flight
+
+[cols="3,4,2",options="header"]
+|===
+| Item | Note | Status
+
+| `alib` aggregate library (Route A vs B)
+| Bridge accounting/bookkeeping ↔ the macroeconomic disciplines, over `MacroState`. Route B (an aggregation-morphism library) is recommended; **the Route A vs B decision is owner-gated**
+| (Design) — `docs/alib-aggregate-bridge.adoc`
+
+| EchoAggregation macro reading
+| The Sonnenschein–Mantel–Debreu / representative-agent critique as the `MacroAggregation` *instance* of the general theorem
+| (Cited) — `docs/alib-aggregate-bridge.adoc` §8; anchored to `echo-types` `Example-PairSum`
+
+| betlang stochastic seam
+| Probabilistic wagers over `MacroState` (the ternary `bet` DSL, Racket)
+| (Design)
+
+| OikosBot AffineScript port
+| The *other* Oikos product — a code-analysis GitHub App. Webhook handler + HMAC + dispatch, now that the upstream AffineScript `Json` v0.3 + `Http` server stdlib gates are closed
+| (In-flight) — `bot-integration-affine/`
+
+| `EchoTypes.jl` executable mirror
+| Add an `EchoAggregation` finite-domain shadow to the Julia falsifier
+| (Intended — not this repo)
+|===
+
+== WISHES — desirable, unscheduled, or externally-gated
+
+[cols="3,4,2",options="header"]
+|===
+| Item | Note | Status
+
+| Full SFC model library
+| Runnable Godley–Lavoie models end-to-end through the compiler
+| (Wish) — gated on the desugar block
+
+| Ephapax integration complete
+| Inherit linear types, Tofte–Talpin regions, typestate from Ephapax (the workspace deps for `ephapax-ir` / `ephapax-typing` are commented out in `Cargo.toml` pending a stable Ephapax parser)
+| (Wish) — gated on upstream `hyperpolymath/ephapax`
+
+| Formal SFC semantics / external validation
+| A published account of the desugaring + the accounting-identity calculus
+| (Wish)
+|===
+
+== Live evidence, 2026-06-19 (toolchain run this session)
+
+* *Toolchain:* `cargo 1.94.1` · `rustc 1.94.1`.
+* `cargo build --workspace` → **exit 0** (`Finished dev … in 2.59s`).
+* `cargo test --workspace` → **exit 0**, **71 passed / 0 failed** across:
+  `oikos-syntax` 9 · `oikos-parser` 33 · `oikos-check` 29 (godley 10 + instrument
+  11 + currency 4 + cross_ref 4) · `oikos-desugar` 0 · all doc-tests 0.
+
+== Honest cross-cutting notes
+
+* The MUST is tested at the *check layer on hand-constructed AST* (the
+  `tests/godley.rs` cases build `Model` values directly and assert reject-on-violation).
+  It is not yet demonstrated from *surface source* end to end, because the
+  parser→check→desugar pipeline is not fully wired and desugar is blocked.
+* `README.adoc` / `EXPLAINME.adoc` call `oikos-check` "blocked / stub". The live
+  run shows the **pre-desugar** accounting checks are real and green (29 tests);
+  the "blocked" part is specifically the *desugar-to-Ephapax* lowering and any
+  check that needs the desugared IR. We flag this drift rather than restate the docs.
+* `STATE.a2ml` reports 30% / alpha and is weighted toward the OikosBot product;
+  for the DSL itself, the check + parse layers are more mature than that headline
+  suggests, while desugar remains the gating blocker.
+
+== See also
+
+* `AFFIRMATION.adoc` (this repo, new) — the dated, signed, falsifiable receipt for
+  the green `cargo build` / `cargo test` at the anchored commit.
+* `docs/handoffs/OIKOS-NEXT-CLAUDE-2026-06-19.adoc` — the ready-to-paste prompt for
+  the next session.
+* `echo-types/AFFIRMATION.adoc` + `echo-types/docs/status/STATUS-2026-06-19.adoc` —
+  the proof-companion's receipt and the same tables from the verified-Agda vantage.
