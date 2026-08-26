@@ -28,7 +28,7 @@ The following files in `.machine_readable/6a2/` contain structured project metad
 | **Rust** | Oikos DSL compiler crates | Repo root; performance-critical |
 | **AffineScript** (`.affine`) | OikosBot (`bot-integration-affine/`) | Affine types, dependent types, row polymorphism, extensible effects |
 | **Haskell** | OikosBot analyser backend (`analyzers/`) | Existing surface; pure analysis |
-| **Bun** | JS/TS runtime & package management (tier 1) | Default for all new work. Executes `.ts` directly, no build step. Uses an npm-compatible `package.json` plus `bun.lock` — both are expected, not anti-patterns. |
+| **Bun** | JS runtime & package management (tier 1) | Default for all new work. Runs compiled ESM/JS directly — no bundler step. Uses an npm-compatible `package.json` plus `bun.lock` — both are expected, not anti-patterns. |
 | **Tauri 2.0+** | Mobile apps (iOS/Android) | Rust backend + web UI |
 | **Dioxus** | Mobile apps (native UI) | Pure Rust, React-like |
 | **Gleam** | Backend services | Runs on BEAM or compiles to JS |
@@ -46,6 +46,7 @@ The following files in `.machine_readable/6a2/` contain structured project metad
 | TypeScript | AffineScript (for OikosBot) / Rust (for DSL) |
 | **ReScript** (new files) | **AffineScript** — the legacy `bot-integration/` ReScript was removed 2026-05-28 (oikos#41) |
 | JavaScript (new files) | AffineScript |
+| Deno | Bun |
 | Node.js | Bun |
 | npm | Bun |
 | pnpm/yarn | Bun |
@@ -80,7 +81,7 @@ Both are FOSS with independent governance (no Big Tech).
 
 - **Primary**: Guix (guix.scm)
 - **Fallback**: Nix (flake.nix)
-- **JS deps**: Bun (`package.json` + `bun.lock`); `bunx <tool>` for one-off tooling
+- **JS deps**: Bun (`package.json` + `bun.lock`). Declare tooling as a devDependency and run `bunx --no-install --bun <tool>` — a bare `bunx <tool>` can fetch an unpinned package and may start Node via its shebang.
 
 ### Security Requirements
 
