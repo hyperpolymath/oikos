@@ -81,6 +81,6 @@ stored on *RAID 10 + Acronis* (per Memory #4).
 
 ==== Integration Security
 
-* *Environment Variables*: ```bash # Example: .env
-SCARCITY_API_KEY="`x`" # Never commit this! GITHUB_TOKEN="`y`" # Use
-GitLab CI variables or encrypted secrets.
+* *Environment Variables*: configure `SCARCITY_API_KEY` and
+`GITHUB_TOKEN` only through the deployment secret store. The repository
+contains no example assignments or fallback values for either secret.
