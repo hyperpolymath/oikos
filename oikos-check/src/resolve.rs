@@ -99,7 +99,7 @@ fn collect<'m, T>(
 
 // Satisfy the borrow checker for SmolStr-keyed collections when the key function
 // returns a &str that is derived from a SmolStr field.
-impl<'m> SymbolTable<'m> {
+impl SymbolTable<'_> {
     /// Check whether a given account name is known.
     pub fn has_account(&self, name: &SmolStr) -> bool {
         self.accounts.contains_key(name.as_str())
