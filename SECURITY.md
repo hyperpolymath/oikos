@@ -1,6 +1,6 @@
 <!--
 SPDX-License-Identifier: CC-BY-SA-4.0
-SPDX-FileCopyrightText: 2024-2026 Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
+SPDX-FileCopyrightText: 2024-2026 Jonathan D.A. Jewell
 -->
 
 # Security policy
