@@ -4,7 +4,7 @@ Copyright (c) Jonathan D.A. Jewell <j.d.a.jewell@open.ac.uk>
 -->
 ## Machine-Readable Artefacts
 
-The following files in `.machine_readable/6a2/` contain structured project metadata (a2ml format; the prior `.scm` Guile-Scheme files were retired estate-wide):
+The following files in `.machine_readable/descriptiles/` contain structured project metadata (a2ml format; the prior `.scm` Guile-Scheme files were retired estate-wide):
 
 - `STATE.a2ml` - Current project state and progress
 - `META.a2ml` - Architecture decisions and development practices
@@ -34,7 +34,7 @@ The following files in `.machine_readable/6a2/` contain structured project metad
 | **Gleam** | Backend services | Runs on BEAM or compiles to JS |
 | **Bash/POSIX Shell** | Scripts, automation | Keep minimal |
 | **Nickel** | Configuration language | For complex configs |
-| **A2ML** | State/meta files | `.machine_readable/6a2/*.a2ml` |
+| **A2ML** | State/meta files | `.machine_readable/descriptiles/*.a2ml` |
 | **Julia** | Batch scripts, data processing | Per RSR |
 | **OCaml** | AffineScript compiler upstream | Not in this repo (lives in `hyperpolymath/affinescript`) |
 | **Ada** | Safety-critical systems | Where required |
